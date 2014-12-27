@@ -39,7 +39,7 @@
 	<variableList>
 		<variable>
 			<name>LOOCI</name>
-			<value>file:/C:/Program%20Files%20(x86)/LooCI/looci2-osgi</value>
+			<value>file:/C:/Users/Mattias/looci</value>
 		</variable>
 	</variableList>
 </projectDescription>
