@@ -44,7 +44,7 @@
 	<variableList>
 		<variable>
 			<name>LOOCI</name>
-			<value>file:/C:/Users/Mattias/looci</value>
+			<value>file:/home/user/looci</value>
 		</variable>
 	</variableList>
 </projectDescription>
