@@ -1,7 +1,7 @@
 CONTIKI_PROJECT = hello-world
 all: $(CONTIKI_PROJECT)
-
-#UIP_CONF_IPV6=1
-
+TARGET = zigduino
 CONTIKI = ../contiki
+CONTIKI_WITH_IPV6 = 1
+
 include $(CONTIKI)/Makefile.include
