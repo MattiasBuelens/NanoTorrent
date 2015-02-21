@@ -11,7 +11,7 @@
 			<arguments>
 				<dictionary>
 					<key>LaunchConfigHandle</key>
-					<value>&lt;project&gt;/.externalToolBuilders/Ant.launch</value>
+					<value>&lt;project&gt;/.externalToolBuilders/AntBuild.launch</value>
 				</dictionary>
 			</arguments>
 		</buildCommand>
