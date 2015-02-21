@@ -35,6 +35,11 @@
 			<type>2</type>
 			<locationURI>LOOCI/lnk/lc_osgi/LoociCore/Felix/bin</locationURI>
 		</link>
+		<link>
+			<name>looci</name>
+			<type>2</type>
+			<locationURI>LOOCI</locationURI>
+		</link>
 	</linkedResources>
 	<variableList>
 		<variable>
