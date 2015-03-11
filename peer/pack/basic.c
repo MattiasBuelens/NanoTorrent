@@ -44,21 +44,21 @@ void nanotorrent_unpack_uint32(uint8_t **cur, uint32_t *num) {
 }
 
 void nanotorrent_pack_ip6addr(uint8_t **cur, const uip_ip6addr_t *addr) {
-	memcpy(*cur, addr, sizeof(uip_ip6addr_t));
+	uip_ip4addr_copy(*cur, addr);
 	*cur += sizeof(uip_ip6addr_t);
 }
 
 void nanotorrent_unpack_ip6addr(uint8_t **cur, uip_ip6addr_t *addr) {
-	memcpy(addr, *cur, sizeof(uip_ip6addr_t));
+	uip_ip4addr_copy(addr, *cur);
 	*cur += sizeof(uip_ip6addr_t);
 }
 
 void nanotorrent_pack_sha1_digest(uint8_t **cur, const sha1_digest_t *digest) {
-	memcpy(*cur, digest, sizeof(sha1_digest_t));
+	sha1_copy(*cur, digest);
 	*cur += sizeof(sha1_digest_t);
 }
 
 void nanotorrent_unpack_sha1_digest(uint8_t **cur, sha1_digest_t *digest) {
-	memcpy(digest, *cur, sizeof(sha1_digest_t));
+	sha1_copy(digest, *cur);
 	*cur += sizeof(sha1_digest_t);
 }
