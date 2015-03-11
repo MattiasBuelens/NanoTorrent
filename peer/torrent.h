@@ -45,6 +45,10 @@ typedef struct nanotorrent_torrent_state {
 	 */
 	sha1_digest_t info_hash;
 	/**
+	 * Port listening for connections from other peers
+	 */
+	uint16_t listen_port;
+	/**
 	 * Swarm state
 	 */
 	nanotorrent_swarm_state_t swarm;

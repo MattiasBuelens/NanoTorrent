@@ -14,8 +14,18 @@
  * Swarm state
  */
 typedef struct nanotorrent_swarm_state {
+	/**
+	 * Number of connected peers
+	 */
 	uint8_t num_peers;
+	/**
+	 * Connected peers
+	 */
 	nanotorrent_peer_info_t peers[NANOTORRENT_MAX_PEERS];
+	/**
+	 * UDP socket with tracker
+	 */
+	struct udp_socket tracker_socket;
 } nanotorrent_swarm_state_t;
 
 /**
@@ -39,19 +49,19 @@ enum nanotracker_announce_event {
 	/**
 	 * Client refreshes its swarm membership
 	 */
-	REFRESH = 0,
+	NANOTRACKER_ANNOUNCE_REFRESH = 0,
 	/**
 	 * Client join the swarm
 	 */
-	STARTED,
+	NANOTRACKER_ANNOUNCE_STARTED,
 	/**
 	 * Client gracefully leaves the swarm
 	 */
-	STOPPED,
+	NANOTRACKER_ANNOUNCE_STOPPED,
 	/**
 	 * Client completed the download, becomes a seed
 	 */
-	COMPLETED
+	NANOTRACKER_ANNOUNCE_COMPLETED
 };
 typedef uint8_t nanotracker_announce_event_t;
 
