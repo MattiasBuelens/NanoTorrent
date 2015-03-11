@@ -18,9 +18,9 @@ void nanotorrent_swarm_handle_reply(uint8_t *data,
 	nanotorrent_unpack_announce_reply(&data, &reply);
 
 	// Compare torrent info hash
-	if (!SHA1Equal(&state->info_hash, &reply->info_hash)) {
+	if (!sha1_cmp(&state->info_hash, &reply->info_hash)) {
 		PRINTF("Ignoring reply for unknown torrent ");
-		SHA1Print(&reply->info_hash);
+		sha1_print(&reply->info_hash);
 		PRINTF("\n");
 		return;
 	}
