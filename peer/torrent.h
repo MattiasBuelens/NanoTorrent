@@ -12,10 +12,41 @@
 #include "swarm.h"
 
 /**
+ * Torrent descriptor
+ */
+typedef struct nanotorrent_torrent_desc {
+	/**
+	 * Tracker
+	 */
+	uip_ip6addr_t tracker_ip;
+	uint16_t tracker_port;
+	/**
+	 * Sizes
+	 */
+	uint16_t file_size;
+	uint16_t piece_size;
+	/**
+	 * Pieces
+	 */
+	uint8_t num_pieces;
+	sha1_digest_t *piece_hashes; // TODO Where to allocate?
+} nanotorrent_torrent_desc_t;
+
+/**
  * Torrent state
  */
 typedef struct nanotorrent_torrent_state {
+	/**
+	 * Torrent descriptor
+	 */
+	nanotorrent_torrent_desc_t desc;
+	/*
+	 * Hash of torrent info
+	 */
 	sha1_digest_t info_hash;
+	/**
+	 * Swarm state
+	 */
 	nanotorrent_swarm_state_t swarm;
 } nanotorrent_torrent_state_t;
 

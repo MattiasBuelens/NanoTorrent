@@ -9,6 +9,11 @@
 #define NANOTORRENT_CONFIG_H_
 
 /**
+ * Maximum number of pieces in a torrent
+ */
+#define NANOTORRENT_MAX_PIECES 32
+
+/**
  * Maximum amount of peers to request from tracker
  */
 #define NANOTORRENT_MAX_PEERS 16
