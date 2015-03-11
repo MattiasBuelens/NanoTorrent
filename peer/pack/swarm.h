@@ -13,19 +13,19 @@
 void nanotorrent_pack_peer_info(uint8_t **cur,
 		const nanotorrent_peer_info_t *peer_info);
 
-void nanotorrent_unpack_peer_info(uint8_t **cur,
+void nanotorrent_unpack_peer_info(const uint8_t **cur,
 		nanotorrent_peer_info_t *peer_info);
 
 void nanotorrent_pack_announce_request(uint8_t **cur,
 		const nanotorrent_announce_request_t *request);
 
-void nanotorrent_unpack_announce_request(uint8_t **cur,
+void nanotorrent_unpack_announce_request(const uint8_t **cur,
 		nanotorrent_announce_request_t *request);
 
 void nanotorrent_pack_announce_reply(uint8_t **cur,
 		const nanotorrent_announce_reply_t *reply);
 
-void nanotorrent_unpack_announce_reply(uint8_t **cur,
+void nanotorrent_unpack_announce_reply(const uint8_t **cur,
 		nanotorrent_announce_reply_t *reply);
 
 #endif /* NANOTORRENT_PACK_COMMON_H_ */
