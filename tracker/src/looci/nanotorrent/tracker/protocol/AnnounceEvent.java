@@ -3,9 +3,9 @@ package looci.nanotorrent.tracker.protocol;
 public enum AnnounceEvent {
 
 	/**
-	 * Regular periodic request.
+	 * Peer refreshes its swarm membership.
 	 */
-	PERIODIC((byte) 0),
+	REFRESH((byte) 0),
 
 	/**
 	 * Peer starting.
