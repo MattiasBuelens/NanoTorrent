@@ -2,6 +2,7 @@ package looci.nanotorrent.tracker.protocol;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -43,6 +44,10 @@ public class AnnounceReply {
 
 		public void addPeer(PeerInfo peer) {
 			this.peers.add(peer);
+		}
+
+		public void addPeers(Collection<? extends PeerInfo> peers) {
+			this.peers.addAll(peers);
 		}
 
 		public AnnounceReply build() {

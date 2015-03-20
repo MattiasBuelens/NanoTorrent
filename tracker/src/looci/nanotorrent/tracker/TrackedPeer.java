@@ -6,17 +6,23 @@ import looci.nanotorrent.tracker.protocol.PeerInfo;
 
 public class TrackedPeer {
 
+	private final TrackedTorrent torrent;
 	private final PeerInfo peerInfo;
 	private final Date joinTime;
 
 	private PeerState state;
 	private Date lastAnnounceTime;
 
-	public TrackedPeer(PeerInfo peerInfo, Date joinTime) {
+	public TrackedPeer(TrackedTorrent torrent, PeerInfo peerInfo, Date joinTime) {
+		this.torrent = torrent;
 		this.peerInfo = peerInfo;
 		this.joinTime = joinTime;
 		this.state = PeerState.UNKNOWN;
 		this.lastAnnounceTime = joinTime;
+	}
+
+	public TrackedTorrent getTorrent() {
+		return torrent;
 	}
 
 	public PeerInfo getPeerInfo() {

@@ -26,6 +26,12 @@ public final class PeerInfo {
 		data.putShort(port);
 	}
 
+	public static PeerInfo read(ByteBuffer data) {
+		Inet6Address address = IOUtils.getInet6Address(data);
+		short port = data.getShort();
+		return new PeerInfo(address, port);
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

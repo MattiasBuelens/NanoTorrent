@@ -1,20 +1,17 @@
 package looci.nanotorrent.tracker.protocol;
 
-import java.net.Inet6Address;
 import java.nio.ByteBuffer;
 
 public class AnnounceRequest {
 
 	private final InfoHash infoHash;
-	private final Inet6Address ip;
-	private final short port;
+	private final PeerInfo peerInfo;
 	private final int numWant;
 	private final AnnounceEvent event;
 
 	protected AnnounceRequest(Builder builder) {
 		this.infoHash = builder.infoHash;
-		this.ip = builder.ip;
-		this.port = builder.port;
+		this.peerInfo = builder.peerInfo;
 		this.numWant = builder.numWant;
 		this.event = builder.event;
 	}
@@ -23,12 +20,8 @@ public class AnnounceRequest {
 		return infoHash;
 	}
 
-	public Inet6Address getIP() {
-		return ip;
-	}
-
-	public short getPort() {
-		return port;
+	public PeerInfo getPeerInfo() {
+		return peerInfo;
 	}
 
 	public int getNumWant() {
@@ -42,8 +35,7 @@ public class AnnounceRequest {
 	public static AnnounceRequest read(ByteBuffer data) {
 		Builder builder = new Builder();
 		builder.infoHash(InfoHash.read(data));
-		builder.ip(IOUtils.getInet6Address(data));
-		builder.port(data.getShort());
+		builder.peerInfo(PeerInfo.read(data));
 		builder.numWant(data.getInt());
 		builder.event(AnnounceEvent.byValue(data.get()));
 		return builder.build();
@@ -52,8 +44,7 @@ public class AnnounceRequest {
 	public static class Builder {
 
 		private InfoHash infoHash;
-		private Inet6Address ip;
-		private short port;
+		private PeerInfo peerInfo;
 		private int numWant;
 		private AnnounceEvent event;
 
@@ -62,13 +53,8 @@ public class AnnounceRequest {
 			return this;
 		}
 
-		public Builder ip(Inet6Address ip) {
-			this.ip = ip;
-			return this;
-		}
-
-		public Builder port(short port) {
-			this.port = port;
+		public Builder peerInfo(PeerInfo peerInfo) {
+			this.peerInfo = peerInfo;
 			return this;
 		}
 
