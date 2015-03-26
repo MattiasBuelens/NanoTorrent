@@ -60,4 +60,9 @@ public final class PeerInfo {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "[" + getAddress().getHostAddress() + "]:" + getPort();
+	}
+
 }

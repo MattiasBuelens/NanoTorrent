@@ -2,6 +2,7 @@ package looci.nanotorrent.tracker.protocol;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Formatter;
 
 public class InfoHash {
 
@@ -15,6 +16,15 @@ public class InfoHash {
 	public InfoHash(byte[] id) {
 		System.arraycopy(id, 0, this.hash, 0,
 				Math.min(id.length, INFO_HASH_LENGTH));
+	}
+
+	public String getHexString() {
+		try (Formatter formatter = new Formatter()) {
+			for (byte b : hash) {
+				formatter.format("%02x", b);
+			}
+			return formatter.toString();
+		}
 	}
 
 	public static InfoHash read(ByteBuffer data) {
@@ -47,6 +57,11 @@ public class InfoHash {
 		if (!Arrays.equals(hash, other.hash))
 			return false;
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return getHexString();
 	}
 
 }

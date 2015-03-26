@@ -1,11 +1,14 @@
 package looci.nanotorrent.tracker;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import looci.nanotorrent.tracker.protocol.AnnounceEvent;
 import looci.nanotorrent.tracker.protocol.AnnounceReply;
@@ -15,19 +18,28 @@ import looci.nanotorrent.tracker.protocol.PeerInfo;
 
 public class Tracker {
 
+	protected final Logger log = Logger
+			.getLogger(Tracker.class.getSimpleName());
+
 	private final Map<InfoHash, TrackedTorrent> torrents = new HashMap<>();
 
 	public TrackedTorrent getTorrent(InfoHash infoHash) {
 		return torrents.get(infoHash);
 	}
 
+	public Collection<TrackedTorrent> getTorrents() {
+		return Collections.unmodifiableCollection(torrents.values());
+	}
+
 	public TrackedTorrent track(InfoHash infoHash) {
+		log(Level.INFO, "Start tracking torrent %s", infoHash);
 		TrackedTorrent torrent = new TrackedTorrent(infoHash);
 		torrents.put(infoHash, torrent);
 		return torrent;
 	}
 
 	public boolean untrack(InfoHash infoHash) {
+		log(Level.INFO, "Stop tracking torrent %s", infoHash);
 		return torrents.remove(infoHash) != null;
 	}
 
@@ -36,6 +48,9 @@ public class Tracker {
 	}
 
 	public AnnounceReply handleAnnounceRequest(AnnounceRequest request) {
+		log(Level.FINE, "Announce request received from %s with event %s",
+				request.getPeerInfo(), request.getEvent());
+
 		TrackedTorrent torrent = getTorrent(request.getInfoHash());
 		if (torrent == null) {
 			// TODO Okay to automatically track?
@@ -55,6 +70,8 @@ public class Tracker {
 				updatePeerState(peer, request.getEvent());
 			}
 			// Stop tracking peer
+			log(Level.INFO, "Stop tracking peer %s in %s",
+					request.getPeerInfo(), torrent.getInfoHash());
 			torrent.removePeer(request.getPeerInfo());
 			// Return empty reply
 			return reply.build();
@@ -62,6 +79,8 @@ public class Tracker {
 
 		if (peer == null) {
 			// Start tracking peer
+			log(Level.INFO, "Start tracking peer %s in %s",
+					request.getPeerInfo(), torrent.getInfoHash());
 			peer = torrent.addPeer(request.getPeerInfo(), now);
 		}
 
@@ -72,6 +91,7 @@ public class Tracker {
 		// Find some other peers
 		List<PeerInfo> otherPeers = getOtherPeers(peer, request.getNumWant());
 		reply.addPeers(otherPeers);
+		log(Level.FINE, "Replied with %d other peers", otherPeers.size());
 
 		return reply.build();
 	}
@@ -155,6 +175,10 @@ public class Tracker {
 			peer.setState(PeerState.UNKNOWN);
 			break;
 		}
+	}
+
+	protected void log(Level level, String format, Object... args) {
+		log.log(level, String.format(format, args));
 	}
 
 }
