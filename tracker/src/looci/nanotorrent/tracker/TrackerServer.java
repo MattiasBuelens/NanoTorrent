@@ -2,7 +2,6 @@ package looci.nanotorrent.tracker;
 
 import java.io.IOException;
 import java.net.Inet6Address;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.StandardProtocolFamily;
 import java.nio.ByteBuffer;
@@ -73,6 +72,10 @@ public class TrackerServer {
 		bind(null, port);
 	}
 
+	public void close() throws IOException {
+		channel.close();
+	}
+
 	public void receive() throws IOException {
 		if (!isConnected()) {
 			throw new IllegalStateException("Tracker not connected");
@@ -91,29 +94,6 @@ public class TrackerServer {
 		// Send reply
 		buffer.flip();
 		channel.send(buffer, remote);
-	}
-
-	public static void main(String[] args) throws Exception {
-		if (args.length == 0) {
-			System.out.println("Parameters: port [address]");
-			System.exit(0);
-			return;
-		}
-
-		int port = Integer.parseInt(args[0]);
-		Inet6Address address = null;
-		if (args.length >= 2) {
-			address = (Inet6Address) InetAddress.getByName(args[1]);
-		}
-
-		TrackerServer server = new TrackerServer();
-		server.bind(address, port);
-		System.out.format("Tracker started on port %d of %s\n",
-				server.getPort(), server.getAddress().toString());
-
-		while (server.isConnected()) {
-			server.receive();
-		}
 	}
 
 }
