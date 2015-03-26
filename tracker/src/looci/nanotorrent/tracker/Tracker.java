@@ -38,8 +38,8 @@ public class Tracker {
 	public AnnounceReply handleAnnounceRequest(AnnounceRequest request) {
 		TrackedTorrent torrent = getTorrent(request.getInfoHash());
 		if (torrent == null) {
-			// TODO Better error handling?
-			return null;
+			// TODO Okay to automatically track?
+			torrent = track(request.getInfoHash());
 		}
 
 		Date now = new Date();
@@ -70,7 +70,8 @@ public class Tracker {
 		updatePeerState(peer, request.getEvent());
 
 		// Find some other peers
-		reply.addPeers(getOtherPeers(peer, request.getNumWant()));
+		List<PeerInfo> otherPeers = getOtherPeers(peer, request.getNumWant());
+		reply.addPeers(otherPeers);
 
 		return reply.build();
 	}
