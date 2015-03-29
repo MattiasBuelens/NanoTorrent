@@ -27,9 +27,16 @@ void nanotorrent_swarm_init(nanotorrent_torrent_state_t *state) {
 void nanotorrent_swarm_join(nanotorrent_torrent_state_t *state) {
 	nanotorrent_announce_request_t request;
 
+	// Get own global IP
+	uip_ds6_addr_t *global_address = uip_ds6_get_global(-1);
+	if (global_address == NULL) {
+		PRINTF("ERROR! No global address\n");
+		return;
+	}
+
 	// Create announce request
 	sha1_copy(&request.info_hash, &state->info_hash);
-	uip_gethostaddr(&request.peer_info.peer_ip);
+	uip_ip6addr_copy(&request.peer_info.peer_ip, &global_address->ipaddr);
 	request.peer_info.peer_port = state->listen_port;
 	request.num_want = NANOTORRENT_MAX_PEERS;
 	request.event = NANOTRACKER_ANNOUNCE_STARTED;
