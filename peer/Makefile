@@ -4,7 +4,7 @@ all: $(CONTIKI_PROJECT)
 CONTIKI = ../contiki
 TARGET = zigduino
 
-PROJECT_SOURCEFILES += swarm.c
+PROJECT_SOURCEFILES += swarm.c piece.c
 
 PROJECTDIRS += crypto
 PROJECT_SOURCEFILES += crypto.c sha1.c

@@ -9,6 +9,11 @@
 #define NANOTORRENT_CONFIG_H_
 
 /**
+ * Maximum length of file name
+ */
+#define NANOTORRENT_FILE_NAME_LENGTH 16
+
+/**
  * Maximum number of pieces in a torrent
  */
 #define NANOTORRENT_MAX_PIECES 32

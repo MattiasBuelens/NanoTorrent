@@ -44,6 +44,20 @@ typedef struct nanotorrent_swarm_state {
 } nanotorrent_swarm_state_t;
 
 /**
+ * Piece state
+ */
+typedef struct nanotorrent_piece_state {
+	/**
+	 * File descriptor
+	 */
+	int file;
+	/**
+	 * Bit vector of completed pieces
+	 */
+	uint32_t completed;
+} nanotorrent_piece_state_t;
+
+/**
  * Torrent state
  */
 typedef struct nanotorrent_torrent_state {
@@ -56,6 +70,10 @@ typedef struct nanotorrent_torrent_state {
 	 */
 	sha1_digest_t info_hash;
 	/**
+	 * Destination file name
+	 */
+	char file_name[NANOTORRENT_FILE_NAME_LENGTH];
+	/**
 	 * Port listening for connections from other peers
 	 */
 	uint16_t listen_port;
@@ -63,6 +81,10 @@ typedef struct nanotorrent_torrent_state {
 	 * Swarm state
 	 */
 	nanotorrent_swarm_state_t swarm;
+	/**
+	 * Piece state
+	 */
+	nanotorrent_piece_state_t piece;
 } nanotorrent_torrent_state_t;
 
 #endif /* NANOTORRENT_STATE_H_ */
