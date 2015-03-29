@@ -17,9 +17,13 @@
 #endif /* MIN */
 
 #include "contiki.h"
-#include "uip.h"
+#include "contiki-lib.h"
+#include "contiki-net.h"
+
+#define DEBUG DEBUG_PRINT
+#include "net/ip/uip-debug.h"
 
 #include "config.h"
-#include "sha1.h"
+#include "crypto.h"
 
 #endif /* NANOTORRENT_COMMON_H_ */

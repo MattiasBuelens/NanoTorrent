@@ -1,13 +1,14 @@
 /**
  * \file
- *         SHA-1
+ *         Cryptographic functions
  * \author
  *         Mattias Buelens <mattias.buelens@student.kuleuven.be>
  */
 
-#ifndef NANOTORRENT_SHA1_H_
-#define NANOTORRENT_SHA1_H_
+#ifndef NANOTORRENT_CRYPTO_H_
+#define NANOTORRENT_CRYPTO_H_
 
+#include "common.h"
 #include "crypto/sha1.h"
 
 /*
@@ -34,4 +35,4 @@ int sha1_result(sha1_context_t *context, sha1_digest_t *dest);
 
 int sha1_compute(const uint8_t *src, const size_t len, sha1_digest_t *dest);
 
-#endif /* NANOTORRENT_SHA1_H_ */
+#endif /* NANOTORRENT_CRYPTO_H_ */

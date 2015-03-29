@@ -1,14 +1,15 @@
 /**
  * \file
- *         SHA-1
+ *         Cryptographic functions.
  * \author
  *         Mattias Buelens <mattias.buelens@student.kuleuven.be>
  */
 
-#include "sha1.h"
+#include "crypto.h"
 
 void sha1_print(const sha1_digest_t *digest) {
-	for (int i = 0; i < SHA1HashSize; i++) {
+	int i;
+	for (i = 0; i < SHA1HashSize; i++) {
 		PRINTF("%02x", digest->bytes[i]);
 	}
 }
@@ -22,12 +23,12 @@ int sha1_add(sha1_context_t *context, const uint8_t *src, const size_t len) {
 }
 
 int sha1_result(sha1_context_t *context, sha1_digest_t *dest) {
-	return SHA1Result(context, &dest->bytes) == 0;
+	return SHA1Result(context, dest->bytes) == 0;
 }
 
 int sha1_compute(const uint8_t *src, const size_t len, sha1_digest_t *dest) {
 	SHA1Context context;
-	sha_init(&context);
-	sha_add(&context, src, len);
+	sha1_init(&context);
+	sha1_add(&context, src, len);
 	return sha1_result(&context, dest);
 }

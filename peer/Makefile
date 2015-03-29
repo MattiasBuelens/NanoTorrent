@@ -1,7 +1,16 @@
 CONTIKI_PROJECT = hello-world
 all: $(CONTIKI_PROJECT)
-TARGET = zigduino
-CONTIKI = ../contiki
-CONTIKI_WITH_IPV6 = 1
 
+CONTIKI = ../contiki
+TARGET = zigduino
+
+PROJECT_SOURCEFILES += swarm.c
+
+PROJECTDIRS += crypto
+PROJECT_SOURCEFILES += crypto.c sha1.c
+
+PROJECTDIRS += pack
+PROJECT_SOURCEFILES += pack-basic.c pack-swarm.c
+
+CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include

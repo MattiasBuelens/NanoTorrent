@@ -5,10 +5,13 @@
  *         Mattias Buelens <mattias.buelens@student.kuleuven.be>
  */
 
-#include "common.h"
-#include "pack.h"
 #include "swarm.h"
-#include "torrent.h"
+#include "pack.h"
+
+void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
+		void *ptr, const uip_ipaddr_t *src_addr, uint16_t src_port,
+		const uip_ipaddr_t *dest_addr, uint16_t dest_port, const uint8_t *data,
+		uint16_t datalen);
 
 void nanotorrent_swarm_init(nanotorrent_torrent_state_t *state) {
 	// Clear connected peers
@@ -25,11 +28,11 @@ void nanotorrent_swarm_join(nanotorrent_torrent_state_t *state) {
 	nanotorrent_announce_request_t request;
 
 	// Create announce request
-	sha1_copy(&request->info_hash, &state->info_hash);
-	uip_gethostaddr(&request->peer_info.peer_ip);
-	request->peer_info.peer_port = state->listen_port;
-	request->num_want = NANOTORRENT_MAX_PEERS;
-	request->event = NANOTRACKER_ANNOUNCE_STARTED;
+	sha1_copy(&request.info_hash, &state->info_hash);
+	uip_gethostaddr(&request.peer_info.peer_ip);
+	request.peer_info.peer_port = state->listen_port;
+	request.num_want = NANOTORRENT_MAX_PEERS;
+	request.event = NANOTRACKER_ANNOUNCE_STARTED;
 
 	// Connect to tracker
 	udp_socket_connect(&state->swarm.tracker_socket, &state->desc.tracker_ip,
@@ -51,24 +54,25 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 		uint16_t datalen) {
 	nanotorrent_announce_reply_t reply;
 	nanotorrent_torrent_state_t *state = ptr;
-	uint8_t *cur = data;
+	const uint8_t *cur = data;
+	int i;
 
 	// Parse reply
 	nanotorrent_unpack_announce_reply(&cur, &reply);
 
 	// Compare torrent info hash
-	if (!sha1_cmp(&state->info_hash, &reply->info_hash)) {
+	if (!sha1_cmp(&state->info_hash, &reply.info_hash)) {
 		PRINTF("Ignoring reply for unknown torrent ");
-		sha1_print(&reply->info_hash);
+		sha1_print(&reply.info_hash);
 		PRINTF("\n");
 		return;
 	}
 
 	// Update number of peers
-	state->swarm.num_peers = MIN(reply->num_peers, NANOTORRENT_MAX_PEERS);
+	state->swarm.num_peers = MIN(reply.num_peers, NANOTORRENT_MAX_PEERS);
 	// Read peers into state
-	for (int i = 0; i < state->swarm.num_peers; i++) {
-		nanotorrent_pack_peer_info(&cur, &state->swarm.peers[i]);
+	for (i = 0; i < state->swarm.num_peers; i++) {
+		nanotorrent_unpack_peer_info(&cur, &state->swarm.peers[i]);
 	}
 
 	// Close tracker socket

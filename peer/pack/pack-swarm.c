@@ -5,9 +5,8 @@
  *         Mattias Buelens <mattias.buelens@student.kuleuven.be>
  */
 
-#include "pack/swarm.h"
-
-#include "basic.h"
+#include "pack-swarm.h"
+#include "pack-basic.h"
 
 void nanotorrent_pack_peer_info(uint8_t **cur,
 		const nanotorrent_peer_info_t *peer_info) {
