@@ -1,4 +1,4 @@
 [submodule "contiki"]
 	path = contiki
 	url = https://github.com/MattiasBuelens/contiki.git
-	branch = platform-zigduino
+	branch = master
