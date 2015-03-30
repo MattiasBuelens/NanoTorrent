@@ -11,7 +11,7 @@
 // TODO: Better way to find if Coffee is actually used?
 #ifdef __AVR__
 #include "cfs/cfs-coffee.h"
-#define CFS_RESERVE(name, size) cfs_coffee_reserve(name, size)
+#define CFS_RESERVE(name, size) (cfs_coffee_reserve(name, size))
 #else
 #define CFS_RESERVE(...) (0)
 #endif
