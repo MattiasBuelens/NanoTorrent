@@ -2,7 +2,7 @@ CONTIKI_PROJECT = hello-world
 all: $(CONTIKI_PROJECT)
 
 CONTIKI = ../contiki
-TARGET = zigduino
+TARGET = avr-zigduino
 
 PROJECT_SOURCEFILES += swarm.c piece.c
 

@@ -65,6 +65,6 @@ local.properties
 ### Contiki ###
 obj_*/
 *.map
-*.zigduino
+*.avr-zigduino
 *.native
 *.minimal-net
