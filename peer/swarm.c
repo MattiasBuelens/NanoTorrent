@@ -26,6 +26,9 @@ void nanotorrent_swarm_init(nanotorrent_torrent_state_t *state) {
 
 void nanotorrent_swarm_join(nanotorrent_torrent_state_t *state) {
 	nanotorrent_announce_request_t request;
+	PRINTF("Join swarm with tracker [");
+	PRINT6ADDR(&state->desc.tracker_ip);
+	PRINTF("]:%u\n", state->desc.tracker_port);
 
 	// Get own global IP
 	uip_ds6_addr_t *global_address = uip_ds6_get_global(-1);
