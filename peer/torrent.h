@@ -28,7 +28,7 @@ typedef struct nanotorrent_torrent_desc {
 	 * Pieces
 	 */
 	uint8_t num_pieces;
-	sha1_digest_t *piece_hashes; // TODO Where to allocate?
+	sha1_digest_t piece_hashes[NANOTORRENT_MAX_PIECES];
 } nanotorrent_torrent_desc_t;
 
 #endif /* NANOTORRENT_TORRENT_H_ */
