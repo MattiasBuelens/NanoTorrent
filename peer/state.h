@@ -61,10 +61,6 @@ typedef struct nanotorrent_piece_state {
  * Torrent state
  */
 typedef struct nanotorrent_torrent_state {
-	/**
-	 * Torrent descriptor
-	 */
-	nanotorrent_torrent_desc_t desc;
 	/*
 	 * Hash of torrent info
 	 */
@@ -77,6 +73,10 @@ typedef struct nanotorrent_torrent_state {
 	 * Port listening for connections from other peers
 	 */
 	uint16_t listen_port;
+	/**
+	 * Torrent descriptor
+	 */
+	nanotorrent_torrent_desc_t desc;
 	/**
 	 * Swarm state
 	 */
