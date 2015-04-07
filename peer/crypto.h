@@ -28,6 +28,7 @@ typedef SHA1Context sha1_context_t;
 #define sha1_copy(dest, src) (*(dest) = *(src))
 
 void sha1_print(const sha1_digest_t *digest);
+void sha1_write(char *buffer, const sha1_digest_t *digest);
 
 void sha1_init(sha1_context_t *context);
 bool sha1_add(sha1_context_t *context, const uint8_t *src, const size_t len);

@@ -14,6 +14,14 @@ void sha1_print(const sha1_digest_t *digest) {
 	}
 }
 
+void sha1_write(char *buffer, const sha1_digest_t *digest) {
+	int i;
+	for (i = 0; i < SHA1HashSize; i++) {
+		sprintf(&buffer[2 * i], "%02x", digest->bytes[i]);
+	}
+	buffer[2 * SHA1HashSize] = 0;
+}
+
 void sha1_init(sha1_context_t *context) {
 	SHA1Reset(context);
 }
