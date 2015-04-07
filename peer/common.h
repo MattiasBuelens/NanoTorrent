@@ -16,6 +16,10 @@
 #define MIN(a, b) ((a) < (b)? (a) : (b))
 #endif /* MIN */
 
+typedef enum {
+	false, true
+} bool;
+
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"

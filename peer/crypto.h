@@ -31,8 +31,8 @@ void sha1_print(const sha1_digest_t *digest);
 
 void sha1_init(sha1_context_t *context);
 int sha1_add(sha1_context_t *context, const uint8_t *src, const size_t len);
-int sha1_result(sha1_context_t *context, sha1_digest_t *dest);
+bool sha1_result(sha1_context_t *context, sha1_digest_t *dest);
 
-int sha1_compute(const uint8_t *src, const size_t len, sha1_digest_t *dest);
+bool sha1_compute(const uint8_t *src, const size_t len, sha1_digest_t *dest);
 
 #endif /* NANOTORRENT_CRYPTO_H_ */
