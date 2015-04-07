@@ -10,5 +10,6 @@
 
 #include "pack/pack-basic.h"
 #include "pack/pack-swarm.h"
+#include "pack/pack-torrent.h"
 
 #endif /* NANOTORRENT_PACK_H_ */

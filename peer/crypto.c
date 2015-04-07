@@ -18,7 +18,7 @@ void sha1_init(sha1_context_t *context) {
 	SHA1Reset(context);
 }
 
-int sha1_add(sha1_context_t *context, const uint8_t *src, const size_t len) {
+bool sha1_add(sha1_context_t *context, const uint8_t *src, const size_t len) {
 	return SHA1Input(context, src, len) == 0;
 }
 

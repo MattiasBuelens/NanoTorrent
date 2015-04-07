@@ -10,7 +10,7 @@ PROJECTDIRS += crypto
 PROJECT_SOURCEFILES += crypto.c sha1.c
 
 PROJECTDIRS += pack
-PROJECT_SOURCEFILES += pack-basic.c pack-swarm.c
+PROJECT_SOURCEFILES += pack-basic.c pack-swarm.c pack-torrent.c
 
 CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
