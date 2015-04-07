@@ -10,6 +10,12 @@
 
 #include "../torrent.h"
 
+void nanotorrent_pack_torrent_info(uint8_t **cur,
+		const nanotorrent_torrent_info_t *info);
+
+void nanotorrent_unpack_torrent_info(const uint8_t **cur,
+		nanotorrent_torrent_info_t *info);
+
 void nanotorrent_pack_torrent_desc(uint8_t **cur,
 		const nanotorrent_torrent_desc_t *desc);
 

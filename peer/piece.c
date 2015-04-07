@@ -16,34 +16,35 @@
 #define CFS_RESERVE(...) (0)
 #endif
 
-uint16_t nanotorrent_piece_offset(nanotorrent_torrent_desc_t *desc,
+uint16_t nanotorrent_piece_offset(nanotorrent_torrent_info_t *info,
 		uint8_t piece_index) {
-	if (piece_index < 0 || piece_index >= desc->num_pieces) {
+	if (piece_index < 0 || piece_index >= info->num_pieces) {
 		ERROR("Invalid piece index: %d", piece_index);
 		return -1;
 	}
-	return piece_index * desc->piece_size;
+	return piece_index * info->piece_size;
 }
 
-uint16_t nanotorrent_piece_size(nanotorrent_torrent_desc_t *desc,
+uint16_t nanotorrent_piece_size(nanotorrent_torrent_info_t *info,
 		uint8_t piece_index) {
-	if (piece_index < 0 || piece_index >= desc->num_pieces) {
+	if (piece_index < 0 || piece_index >= info->num_pieces) {
 		ERROR("Invalid piece index: %d", piece_index);
 		return 0;
 	}
-	if (piece_index == desc->num_pieces - 1) {
+	if (piece_index == info->num_pieces - 1) {
 		// Size of last piece may be less than piece size
-		uint16_t remainder = desc->file_size % desc->piece_size;
-		return remainder == 0 ? desc->piece_size : remainder;
+		uint16_t remainder = info->file_size % info->piece_size;
+		return remainder == 0 ? info->piece_size : remainder;
 	}
-	return desc->piece_size;
+	return info->piece_size;
 }
 
 void nanotorrent_piece_init(nanotorrent_torrent_state_t *state) {
 	// Reserve space for file
-	int result = CFS_RESERVE(state->file_name, state->desc.file_size);
+	int result = CFS_RESERVE(state->file_name, state->desc.info.file_size);
 	if (result == -1) {
-		ERROR("Could not reserve %d bytes for file", state->desc.file_size);
+		ERROR("Could not reserve %d bytes for file",
+				state->desc.info.file_size);
 		return;
 	}
 	// Open file
@@ -67,7 +68,7 @@ void nanotorrent_piece_shutdown(nanotorrent_torrent_state_t *state) {
 
 bool nanotorrent_piece_is_complete(nanotorrent_torrent_state_t *state,
 		uint8_t piece_index) {
-	if (piece_index < 0 || piece_index >= state->desc.num_pieces) {
+	if (piece_index < 0 || piece_index >= state->desc.info.num_pieces) {
 		ERROR("Invalid piece index: %d", piece_index);
 		return -1;
 	}
@@ -76,7 +77,7 @@ bool nanotorrent_piece_is_complete(nanotorrent_torrent_state_t *state,
 
 bool nanotorrent_piece_verify(nanotorrent_torrent_state_t *state,
 		uint8_t piece_index) {
-	uint16_t offset = nanotorrent_piece_offset(&state->desc, piece_index);
+	uint16_t offset = nanotorrent_piece_offset(&state->desc.info, piece_index);
 	if (offset < 0) {
 		return false;
 	}
@@ -89,7 +90,7 @@ bool nanotorrent_piece_verify(nanotorrent_torrent_state_t *state,
 	sha1_context_t context;
 	sha1_init(&context);
 	// Read and process piece
-	uint16_t size = nanotorrent_piece_size(&state->desc, piece_index);
+	uint16_t size = nanotorrent_piece_size(&state->desc.info, piece_index);
 	uint16_t remaining = size;
 	uint8_t buffer[64];
 	while (remaining > 0) {
@@ -114,13 +115,13 @@ bool nanotorrent_piece_verify(nanotorrent_torrent_state_t *state,
 		return false;
 	}
 	// Compare calculated hash with expected hash
-	return sha1_cmp(&digest, &state->desc.piece_hashes[piece_index]);
+	return sha1_cmp(&digest, &state->desc.info.piece_hashes[piece_index]);
 }
 
 uint32_t nanotorrent_piece_verify_all(nanotorrent_torrent_state_t *state) {
 	uint32_t result = 0;
 	uint8_t i;
-	for (i = 0; i < state->desc.num_pieces; i++) {
+	for (i = 0; i < state->desc.info.num_pieces; i++) {
 		bool piece_result = nanotorrent_piece_verify(state, i);
 		result |= piece_result << i;
 	}

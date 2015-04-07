@@ -12,9 +12,9 @@
 #include "torrent.h"
 #include "state.h"
 
-uint16_t nanotorrent_piece_offset(nanotorrent_torrent_desc_t *desc,
+uint16_t nanotorrent_piece_offset(nanotorrent_torrent_info_t *info,
 		uint8_t piece_index);
-uint16_t nanotorrent_piece_size(nanotorrent_torrent_desc_t *desc,
+uint16_t nanotorrent_piece_size(nanotorrent_torrent_info_t *info,
 		uint8_t piece_index);
 
 void nanotorrent_piece_init(nanotorrent_torrent_state_t *state);

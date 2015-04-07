@@ -26,9 +26,9 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		uip_ip6addr(&state.desc.tracker_ip, 0xaaaa, 0x0, 0x0, 0x0, 0x1, 0x2,
 				0x3, 0x4);
 		state.desc.tracker_port = 33333;
-		state.desc.file_size = (1 << 12);
-		state.desc.piece_size = (1 << 8);
-		state.desc.num_pieces = (1 << 4);
+		state.desc.info.file_size = (1 << 12);
+		state.desc.info.piece_size = (1 << 8);
+		state.desc.info.num_pieces = (1 << 4);
 		strncpy(state.file_name, "myprogram", NANOTORRENT_FILE_NAME_LENGTH - 1);
 
 		uip_init();

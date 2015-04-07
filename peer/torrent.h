@@ -11,14 +11,9 @@
 #include "common.h"
 
 /**
- * Torrent descriptor
+ * Torrent info
  */
-typedef struct nanotorrent_torrent_desc {
-	/**
-	 * Tracker
-	 */
-	uip_ip6addr_t tracker_ip;
-	uint16_t tracker_port;
+typedef struct nanotorrent_torrent_info {
 	/**
 	 * Sizes
 	 */
@@ -29,6 +24,24 @@ typedef struct nanotorrent_torrent_desc {
 	 */
 	uint8_t num_pieces;
 	sha1_digest_t piece_hashes[NANOTORRENT_MAX_PIECES];
+} nanotorrent_torrent_info_t;
+
+/**
+ * Torrent descriptor
+ */
+typedef struct nanotorrent_torrent_desc {
+	/**
+	 * Tracker
+	 */
+	uip_ip6addr_t tracker_ip;
+	uint16_t tracker_port;
+	/**
+	 * Info
+	 */
+	nanotorrent_torrent_info_t info;
 } nanotorrent_torrent_desc_t;
+
+bool nanotorrent_torrent_info_hash(const nanotorrent_torrent_info_t *info,
+		sha1_digest_t *info_hash);
 
 #endif /* NANOTORRENT_TORRENT_H_ */
