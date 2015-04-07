@@ -47,11 +47,82 @@ void nanotorrent_piece_init(nanotorrent_torrent_state_t *state) {
 		return;
 	}
 	// Open file
-	int file = cfs_open(state->file_name, CFS_READ | CFS_WRITE);
+	int file = cfs_open(state->file_name, CFS_READ | CFS_WRITE | CFS_APPEND);
 	if (file < 0) {
 		ERROR("Could not open file");
 		return;
 	}
 	state->piece.file = file;
-	// TODO Initialize completed bit vector
+	// Verify file contents
+	state->piece.completed = nanotorrent_piece_verify_all(state);
+}
+
+void nanotorrent_piece_shutdown(nanotorrent_torrent_state_t *state) {
+	// Close file
+	if (state->piece.file >= 0) {
+		cfs_close(state->piece.file);
+	}
+	state->piece.file = -1;
+}
+
+bool nanotorrent_piece_is_complete(nanotorrent_torrent_state_t *state,
+		uint8_t piece_index) {
+	if (piece_index < 0 || piece_index >= state->desc.num_pieces) {
+		ERROR("Invalid piece index: %d", piece_index);
+		return -1;
+	}
+	return (state->piece.completed >> piece_index) & 1;
+}
+
+bool nanotorrent_piece_verify(nanotorrent_torrent_state_t *state,
+		uint8_t piece_index) {
+	uint16_t offset = nanotorrent_piece_offset(&state->desc, piece_index);
+	if (offset < 0) {
+		return false;
+	}
+	// Seek to start of piece
+	int file = state->piece.file;
+	if (cfs_seek(file, offset, CFS_SEEK_SET) < 0) {
+		return false;
+	}
+	// Prepare digest
+	sha1_context_t context;
+	sha1_init(&context);
+	// Read and process piece
+	uint16_t size = nanotorrent_piece_size(&state->desc, piece_index);
+	uint16_t remaining = size;
+	uint8_t buffer[64];
+	while (remaining > 0) {
+		int read = cfs_read(file, buffer, MIN(remaining, sizeof(buffer)));
+		if (read == 0) {
+			// File too small
+			return false;
+		} else if (read < 0) {
+			ERROR("Could not read piece %d", piece_index);
+			return false;
+		}
+		if (!sha1_add(&context, buffer, read)) {
+			ERROR("Could not digest piece %d", piece_index);
+			return false;
+		}
+		remaining -= read;
+	}
+	// Calculate digest
+	sha1_digest_t digest;
+	if (!sha1_result(&context, &digest)) {
+		ERROR("Could not calculate digest of piece %d", piece_index);
+		return false;
+	}
+	// Compare calculated hash with expected hash
+	return sha1_cmp(&digest, &state->desc.piece_hashes[piece_index]);
+}
+
+uint32_t nanotorrent_piece_verify_all(nanotorrent_torrent_state_t *state) {
+	uint32_t result = 0;
+	uint8_t i;
+	for (i = 0; i < state->desc.num_pieces; i++) {
+		bool piece_result = nanotorrent_piece_verify(state, i);
+		result |= piece_result << i;
+	}
+	return result;
 }

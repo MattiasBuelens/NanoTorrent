@@ -18,6 +18,7 @@ uint16_t nanotorrent_piece_size(nanotorrent_torrent_desc_t *desc,
 		uint8_t piece_index);
 
 void nanotorrent_piece_init(nanotorrent_torrent_state_t *state);
+void nanotorrent_piece_shutdown(nanotorrent_torrent_state_t *state);
 bool nanotorrent_piece_is_complete(nanotorrent_torrent_state_t *state,
 		uint8_t piece_index);
 bool nanotorrent_piece_verify(nanotorrent_torrent_state_t *state,
