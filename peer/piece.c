@@ -19,8 +19,7 @@
 uint16_t nanotorrent_piece_offset(nanotorrent_torrent_desc_t *desc,
 		uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= desc->num_pieces) {
-		// Invalid index
-		PRINTF("Invalid piece index: %d\n", piece_index);
+		ERROR("Invalid piece index: %d", piece_index);
 		return -1;
 	}
 	return piece_index * desc->piece_size;
@@ -29,8 +28,7 @@ uint16_t nanotorrent_piece_offset(nanotorrent_torrent_desc_t *desc,
 uint16_t nanotorrent_piece_size(nanotorrent_torrent_desc_t *desc,
 		uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= desc->num_pieces) {
-		// Invalid index
-		PRINTF("Invalid piece index: %d\n", piece_index);
+		ERROR("Invalid piece index: %d", piece_index);
 		return 0;
 	}
 	if (piece_index == desc->num_pieces - 1) {
@@ -45,14 +43,13 @@ void nanotorrent_piece_init(nanotorrent_torrent_state_t *state) {
 	// Reserve space for file
 	int result = CFS_RESERVE(state->file_name, state->desc.file_size);
 	if (result == -1) {
-		PRINTF("ERROR! Could not reserve %d bytes for file\n",
-				state->desc.file_size);
+		ERROR("Could not reserve %d bytes for file", state->desc.file_size);
 		return;
 	}
 	// Open file
 	int file = cfs_open(state->file_name, CFS_READ | CFS_WRITE);
 	if (file < 0) {
-		PRINTF("ERROR! Could not open file\n");
+		ERROR("Could not open file");
 		return;
 	}
 	state->piece.file = file;

@@ -27,6 +27,17 @@ typedef enum {
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 
+// http://maciejczyzewski.me/2015/02/21/better-debug-notices-in-c-using-macros.html
+#define NOTE(S, ...) PRINTF(                                             \
+  "\x1b[1m(%s:%d, %s)\x1b[0m\n  \x1b[1m\x1b[90mnote:\x1b[0m " S "\n",    \
+  __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define WARN(S, ...) PRINTF(                                             \
+  "\x1b[1m(%s:%d, %s)\x1b[0m\n  \x1b[1m\x1b[33mwarning:\x1b[0m " S "\n", \
+  __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define ERROR(S, ...) PRINTA(                                            \
+  "\x1b[1m(%s:%d, %s)\x1b[0m\n  \x1b[1m\x1b[31merror:\x1b[0m " S "\n",   \
+  __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+
 #include "config.h"
 #include "crypto.h"
 

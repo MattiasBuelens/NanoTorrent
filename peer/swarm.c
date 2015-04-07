@@ -33,7 +33,7 @@ void nanotorrent_swarm_join(nanotorrent_torrent_state_t *state) {
 	// Get own global IP
 	uip_ds6_addr_t *global_address = uip_ds6_get_global(-1);
 	if (global_address == NULL) {
-		PRINTF("ERROR! No global address\n");
+		ERROR("No global address");
 		return;
 	}
 
@@ -72,7 +72,7 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 
 	// Compare torrent info hash
 	if (!sha1_cmp(&state->info_hash, &reply.info_hash)) {
-		PRINTF("Ignoring reply for unknown torrent ");
+		WARN("Ignoring reply for unknown torrent");
 		sha1_print(&reply.info_hash);
 		PRINTF("\n");
 		return;
