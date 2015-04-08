@@ -44,4 +44,7 @@ typedef struct nanotorrent_torrent_desc {
 bool nanotorrent_torrent_info_hash(const nanotorrent_torrent_info_t *info,
 		sha1_digest_t *info_hash);
 
+bool nanotorrent_torrent_info_create(nanotorrent_torrent_info_t *info,
+		const int file, const uint16_t piece_size);
+
 #endif /* NANOTORRENT_TORRENT_H_ */

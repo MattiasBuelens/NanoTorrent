@@ -16,8 +16,8 @@
 #define CFS_RESERVE(...) (0)
 #endif
 
-uint16_t nanotorrent_piece_offset(nanotorrent_torrent_info_t *info,
-		uint8_t piece_index) {
+uint16_t nanotorrent_piece_offset(const nanotorrent_torrent_info_t *info,
+		const uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= info->num_pieces) {
 		ERROR("Invalid piece index: %d", piece_index);
 		return -1;
@@ -25,11 +25,11 @@ uint16_t nanotorrent_piece_offset(nanotorrent_torrent_info_t *info,
 	return piece_index * info->piece_size;
 }
 
-uint16_t nanotorrent_piece_size(nanotorrent_torrent_info_t *info,
-		uint8_t piece_index) {
+uint16_t nanotorrent_piece_size(const nanotorrent_torrent_info_t *info,
+		const uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= info->num_pieces) {
 		ERROR("Invalid piece index: %d", piece_index);
-		return 0;
+		return -1;
 	}
 	if (piece_index == info->num_pieces - 1) {
 		// Size of last piece may be less than piece size
@@ -55,7 +55,8 @@ void nanotorrent_piece_init(nanotorrent_torrent_state_t *state) {
 	}
 	state->piece.file = file;
 	// Verify file contents
-	state->piece.completed = nanotorrent_piece_verify_all(state);
+	sha1_context_t context;
+	state->piece.completed = nanotorrent_piece_verify_all(state, &context);
 }
 
 void nanotorrent_piece_shutdown(nanotorrent_torrent_state_t *state) {
@@ -66,8 +67,8 @@ void nanotorrent_piece_shutdown(nanotorrent_torrent_state_t *state) {
 	state->piece.file = -1;
 }
 
-bool nanotorrent_piece_is_complete(nanotorrent_torrent_state_t *state,
-		uint8_t piece_index) {
+bool nanotorrent_piece_is_complete(const nanotorrent_torrent_state_t *state,
+		const uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= state->desc.info.num_pieces) {
 		ERROR("Invalid piece index: %d", piece_index);
 		return -1;
@@ -75,42 +76,54 @@ bool nanotorrent_piece_is_complete(nanotorrent_torrent_state_t *state,
 	return (state->piece.completed >> piece_index) & 1;
 }
 
-bool nanotorrent_piece_verify(nanotorrent_torrent_state_t *state,
-		uint8_t piece_index) {
+uint16_t nanotorrent_piece_digest(sha1_context_t *context, const int file,
+		const uint16_t piece_size) {
+	// Process at most piece_size bytes
+	uint16_t length = 0;
+	uint16_t remaining = piece_size;
+	uint8_t buffer[64];
+	while (remaining > 0) {
+		// Read into buffer
+		int read = cfs_read(file, buffer, MIN(remaining, sizeof(buffer)));
+		if (read == 0) {
+			// At EOF
+			break;
+		} else if (read < 0) {
+			ERROR("Could not read piece");
+			return -1;
+		}
+		// Process from buffer
+		if (!sha1_add(context, buffer, read)) {
+			ERROR("Could not digest piece");
+			return -1;
+		}
+		length += read;
+		remaining -= read;
+	}
+	// Return number of bytes read
+	return length;
+}
+
+bool nanotorrent_piece_verify(const nanotorrent_torrent_state_t *state,
+		sha1_context_t *context, const uint8_t piece_index) {
 	uint16_t offset = nanotorrent_piece_offset(&state->desc.info, piece_index);
 	if (offset < 0) {
 		return false;
 	}
+	uint16_t size = nanotorrent_piece_size(&state->desc.info, piece_index);
 	// Seek to start of piece
 	int file = state->piece.file;
 	if (cfs_seek(file, offset, CFS_SEEK_SET) < 0) {
 		return false;
 	}
-	// Prepare digest
-	sha1_context_t context;
-	sha1_init(&context);
-	// Read and process piece
-	uint16_t size = nanotorrent_piece_size(&state->desc.info, piece_index);
-	uint16_t remaining = size;
-	uint8_t buffer[64];
-	while (remaining > 0) {
-		int read = cfs_read(file, buffer, MIN(remaining, sizeof(buffer)));
-		if (read == 0) {
-			// File too small
-			return false;
-		} else if (read < 0) {
-			ERROR("Could not read piece %d", piece_index);
-			return false;
-		}
-		if (!sha1_add(&context, buffer, read)) {
-			ERROR("Could not digest piece %d", piece_index);
-			return false;
-		}
-		remaining -= read;
-	}
-	// Calculate digest
+	// Calculate piece digest
 	sha1_digest_t digest;
-	if (!sha1_result(&context, &digest)) {
+	sha1_init(context);
+	uint16_t piece_length = nanotorrent_piece_digest(context, file, size);
+	if (piece_length < 0) {
+		return false;
+	}
+	if (!sha1_result(context, &digest)) {
 		ERROR("Could not calculate digest of piece %d", piece_index);
 		return false;
 	}
@@ -118,11 +131,12 @@ bool nanotorrent_piece_verify(nanotorrent_torrent_state_t *state,
 	return sha1_cmp(&digest, &state->desc.info.piece_hashes[piece_index]);
 }
 
-uint32_t nanotorrent_piece_verify_all(nanotorrent_torrent_state_t *state) {
+uint32_t nanotorrent_piece_verify_all(const nanotorrent_torrent_state_t *state,
+		sha1_context_t *context) {
 	uint32_t result = 0;
 	uint8_t i;
 	for (i = 0; i < state->desc.info.num_pieces; i++) {
-		bool piece_result = nanotorrent_piece_verify(state, i);
+		bool piece_result = nanotorrent_piece_verify(state, context, i);
 		result |= piece_result << i;
 	}
 	return result;

@@ -12,17 +12,22 @@
 #include "torrent.h"
 #include "state.h"
 
-uint16_t nanotorrent_piece_offset(nanotorrent_torrent_info_t *info,
-		uint8_t piece_index);
-uint16_t nanotorrent_piece_size(nanotorrent_torrent_info_t *info,
-		uint8_t piece_index);
+uint16_t nanotorrent_piece_offset(const nanotorrent_torrent_info_t *info,
+		const uint8_t piece_index);
+uint16_t nanotorrent_piece_size(const nanotorrent_torrent_info_t *info,
+		const uint8_t piece_index);
 
 void nanotorrent_piece_init(nanotorrent_torrent_state_t *state);
 void nanotorrent_piece_shutdown(nanotorrent_torrent_state_t *state);
-bool nanotorrent_piece_is_complete(nanotorrent_torrent_state_t *state,
-		uint8_t piece_index);
-bool nanotorrent_piece_verify(nanotorrent_torrent_state_t *state,
-		uint8_t piece_index);
-uint32_t nanotorrent_piece_verify_all(nanotorrent_torrent_state_t *state);
+bool nanotorrent_piece_is_complete(const nanotorrent_torrent_state_t *state,
+		const uint8_t piece_index);
+
+uint16_t nanotorrent_piece_digest(sha1_context_t *context, const int file,
+		const uint16_t piece_size);
+
+bool nanotorrent_piece_verify(const nanotorrent_torrent_state_t *state,
+		sha1_context_t *context, const uint8_t piece_index);
+uint32_t nanotorrent_piece_verify_all(const nanotorrent_torrent_state_t *state,
+		sha1_context_t *context);
 
 #endif /* NANOTORRENT_PIECE_H_ */

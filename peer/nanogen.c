@@ -36,7 +36,7 @@ static struct argp_option options[] = {
  * Output file
  */
 { "output", 'o', "DEST", 0,
-		"Output file name.\nDefaults to '<infohash>.nanotorrent'" },
+		"Output file name\nDefaults to '<infohash>.nanotorrent'" },
 /**
  * Piece size
  */
@@ -49,10 +49,10 @@ QUOTE(NANOGEN_DEFAULT_PIECE_SIZE) "" },
 
 // Used by main to communicate with parse_opt
 struct arguments {
-	char *src_file;
-	char *tracker_ip;
+	const char *src_file;
+	const char *tracker_ip;
 	int tracker_port;
-	char *dest_file;
+	const char *dest_file;
 	int piece_size;
 };
 
@@ -99,13 +99,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 // Our argp parser
 static struct argp argp = { options, parse_opt, args_doc, doc };
 
-#define NANOGEN_BUFFER_SIZE (1024)
-
 int main(int argc, char **argv) {
-	struct arguments arguments;
-
-	uint8_t buffer[NANOGEN_BUFFER_SIZE];
-	uint8_t *cur;
+	struct arguments arguments = { 0 };
 
 	// Default arguments
 	arguments.piece_size = NANOGEN_DEFAULT_PIECE_SIZE;
@@ -118,54 +113,25 @@ int main(int argc, char **argv) {
 	int src_file = open(arguments.src_file, O_RDONLY);
 	if (src_file < 0) {
 		printf("Could not open source file");
-		return 0;
+		return -1;
 	}
 
-	// Start creating torrent descriptor
+	// Create torrent descriptor
 	nanotorrent_torrent_desc_t desc;
 	uiplib_ip6addrconv(arguments.tracker_ip, &desc.tracker_ip);
 	desc.tracker_port = arguments.tracker_port;
-	desc.info.piece_size = arguments.piece_size;
+	// Create torrent info
+	if (!nanotorrent_torrent_info_create(&desc.info, src_file,
+			arguments.piece_size)) {
+		goto error_src;
+	}
 
-	// Get file size of source
-	desc.info.file_size = lseek(src_file, 0l, SEEK_END);
-	lseek(src_file, 0l, SEEK_SET);
-
-	// Calculate piece hashes
-	sha1_context_t piece_ctxt;
-	uint8_t piece_index = 0;
-	int buffer_len = 0;
-	do {
-		sha1_init(&piece_ctxt);
-		uint16_t remaining = desc.info.piece_size;
-		while (remaining > 0) {
-			buffer_len = read(src_file, buffer, MIN(remaining, sizeof(buffer)));
-			if (buffer_len == 0) {
-				// At EOF
-				break;
-			}
-			if (buffer_len < 0) {
-				ERROR("Could not read piece %u", piece_index);
-				goto exit_src;
-			}
-			if (!sha1_add(&piece_ctxt, buffer, buffer_len)) {
-				ERROR("Could not digest piece %u", piece_index);
-				goto exit_src;
-			}
-			remaining -= buffer_len;
-		}
-		if (!sha1_result(&piece_ctxt, &desc.info.piece_hashes[piece_index])) {
-			ERROR("Could not calculate digest of piece %u", piece_index);
-			goto exit_src;
-		}
-		piece_index++;
-	} while (buffer_len != 0 /* EOF */);
-
-	desc.info.num_pieces = piece_index;
+	// Done processing source
 	close(src_file);
 
 	// Pack descriptor
-	cur = buffer;
+	uint8_t buffer[1024];
+	uint8_t *cur = buffer;
 	nanotorrent_pack_torrent_desc(&cur, &desc);
 	size_t desc_len = cur - buffer;
 
@@ -175,15 +141,15 @@ int main(int argc, char **argv) {
 	int out_file = mkstemp(out_name);
 	if (out_file < 0) {
 		ERROR("Could not open output file");
-		return 0;
+		goto error;
 	}
 	if (write(out_file, buffer, desc_len) != desc_len) {
 		ERROR("Error while writing to output file");
-		return 0;
+		goto error_out;
 	}
 
 	// Move to destination
-	char *dest_name = arguments.dest_file;
+	const char *dest_name = arguments.dest_file;
 	char dest_gen_name[128];
 	if (dest_name == NULL) {
 		// Calculate torrent info hash
@@ -198,13 +164,16 @@ int main(int argc, char **argv) {
 	}
 	rename(out_name, dest_name);
 
-	goto exit_out;
-
-	exit_src: close(src_file);
+	close(out_file);
 	exit(0);
 	return 0;
 
-	exit_out: close(out_file);
-	exit(0);
-	return 0;
+	error_src: close(src_file);
+	goto error;
+
+	error_out: close(out_file);
+	goto error;
+
+	error: exit(-1);
+	return -1;
 }

@@ -62,12 +62,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 // Our argp parser
 static struct argp argp = { 0, parse_opt, args_doc, doc };
 
-#define NANOGEN_BUFFER_SIZE (1024)
-
 int main(int argc, char **argv) {
-	struct arguments arguments;
-
-	uint8_t buffer[NANOGEN_BUFFER_SIZE];
+	struct arguments arguments = { 0 };
 
 	// Parse our arguments; every option seen by parse_opt will
 	// be reflected in arguments
@@ -77,14 +73,15 @@ int main(int argc, char **argv) {
 	int src_file = open(arguments.src_file, O_RDONLY);
 	if (src_file < 0) {
 		ERROR("Could not open source file");
-		return 0;
+		goto error;
 	}
 
 	// Read into buffer
+	uint8_t buffer[1024];
 	int buffer_len = read(src_file, buffer, sizeof(buffer));
 	if (buffer_len < 0) {
 		ERROR("Could not read source file");
-		goto exit_src;
+		goto error_src;
 	}
 
 	// Unpack torrent descriptor
@@ -94,7 +91,7 @@ int main(int argc, char **argv) {
 	size_t desc_len = desc_cur - buffer;
 	if (buffer_len != desc_len) {
 		ERROR("Malformed source file");
-		goto exit_src;
+		goto error_src;
 	}
 
 	// Calculate torrent info hash
@@ -120,7 +117,12 @@ int main(int argc, char **argv) {
 		printf("\n");
 	}
 
-	exit_src: close(src_file);
 	exit(0);
 	return 0;
+
+	error_src: close(src_file);
+	goto error;
+
+	error: exit(-1);
+	return -1;
 }
