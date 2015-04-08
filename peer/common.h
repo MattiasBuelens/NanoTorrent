@@ -16,6 +16,9 @@
 #define MIN(a, b) ((a) < (b)? (a) : (b))
 #endif /* MIN */
 
+#define QUOTE_(str) #str
+#define QUOTE(str) QUOTE_(str)
+
 typedef enum {
 	false, true
 } bool;

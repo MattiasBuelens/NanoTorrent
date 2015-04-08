@@ -18,6 +18,8 @@
 #include "piece.h"
 #include "pack.h"
 
+#define NANOGEN_DEFAULT_PIECE_SIZE 256
+
 const char *argp_program_version = "nanogen 1.0";
 
 // Program documentation
@@ -38,7 +40,8 @@ static struct argp_option options[] = {
 /**
  * Piece size
  */
-{ "piece", 'p', "SIZE", 0, "Piece size in bytes.\nDefaults to 256" },
+{ "piece", 'p', "SIZE", 0, "Piece size in bytes\nDefaults to "
+QUOTE(NANOGEN_DEFAULT_PIECE_SIZE) "" },
 /**
  * End marker
  */
@@ -105,7 +108,7 @@ int main(int argc, char **argv) {
 	uint8_t *cur;
 
 	// Default arguments
-	arguments.piece_size = 256;
+	arguments.piece_size = NANOGEN_DEFAULT_PIECE_SIZE;
 
 	// Parse our arguments; every option seen by parse_opt will
 	// be reflected in arguments
