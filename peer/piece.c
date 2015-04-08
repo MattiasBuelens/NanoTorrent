@@ -16,6 +16,8 @@
 #define CFS_RESERVE(...) (0)
 #endif
 
+#define NANOTORRENT_PIECE_BUFFER_SIZE 256
+
 uint16_t nanotorrent_piece_offset(const nanotorrent_torrent_info_t *info,
 		const uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= info->num_pieces) {
@@ -81,7 +83,7 @@ uint16_t nanotorrent_piece_digest(sha1_context_t *context, const int file,
 	// Process at most piece_size bytes
 	uint16_t length = 0;
 	uint16_t remaining = piece_size;
-	uint8_t buffer[64];
+	uint8_t buffer[NANOTORRENT_PIECE_BUFFER_SIZE];
 	while (remaining > 0) {
 		// Read into buffer
 		int read = cfs_read(file, buffer, MIN(remaining, sizeof(buffer)));

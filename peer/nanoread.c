@@ -28,7 +28,7 @@ static char args_doc[] = "SOURCE";
 
 // Used by main to communicate with parse_opt
 struct arguments {
-	char *src_file;
+	const char *src_file;
 };
 
 // Parse a single option.
