@@ -4,6 +4,9 @@ all: $(CONTIKI_PROJECT)
 CONTIKI = ../contiki
 TARGET = avr-zigduino
 
+# Use program flash with full file system
+COFFEE_FILES = 4
+
 PROJECT_SOURCEFILES += swarm.c piece.c torrent.c
 
 PROJECTDIRS += crypto
