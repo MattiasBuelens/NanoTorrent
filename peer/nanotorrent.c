@@ -31,8 +31,6 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		state.desc.info.num_pieces = (1 << 4);
 		strncpy(state.file_name, "myprogram", NANOTORRENT_FILE_NAME_LENGTH - 1);
 
-		uip_init();
-
 		nanotorrent_swarm_init(&state);
 		nanotorrent_piece_init(&state);
 

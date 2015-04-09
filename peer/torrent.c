@@ -25,8 +25,8 @@ bool nanotorrent_torrent_info_hash(const nanotorrent_torrent_info_t *info,
 bool nanotorrent_torrent_info_create(nanotorrent_torrent_info_t *info,
 		const int file, const uint16_t piece_size) {
 	// Set file size
-	info->file_size = cfs_seek(file, 0l, SEEK_END);
-	cfs_seek(file, 0l, SEEK_SET);
+	info->file_size = cfs_seek(file, 0l, CFS_SEEK_END);
+	cfs_seek(file, 0l, CFS_SEEK_SET);
 	PRINTF("File size: %u\n", info->file_size);
 
 	// Set piece size
