@@ -24,6 +24,11 @@ void nanotorrent_swarm_init(nanotorrent_torrent_state_t *state) {
 			nanotorrent_swarm_handle_reply);
 }
 
+void nanotorrent_swarm_shutdown(nanotorrent_torrent_state_t *state) {
+	// Close tracker socket
+	udp_socket_close(&state->swarm.tracker_socket);
+}
+
 void nanotorrent_swarm_join(nanotorrent_torrent_state_t *state) {
 	nanotorrent_announce_request_t request;
 	PRINTF("Join swarm with tracker [");

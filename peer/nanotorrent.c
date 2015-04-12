@@ -37,6 +37,7 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		// Join the swarm
 		nanotorrent_swarm_join(&state);
 
+		nanotorrent_swarm_shutdown(&state);
 		nanotorrent_piece_shutdown(&state);
 
 	PROCESS_END()
