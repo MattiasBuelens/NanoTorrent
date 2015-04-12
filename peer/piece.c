@@ -73,9 +73,22 @@ bool nanotorrent_piece_is_complete(const nanotorrent_torrent_state_t *state,
 		const uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= state->desc.info.num_pieces) {
 		ERROR("Invalid piece index: %d", piece_index);
-		return -1;
+		return false;
 	}
 	return (state->piece.completed >> piece_index) & 1;
+}
+
+void nanotorrent_piece_set_complete(const nanotorrent_torrent_state_t *state,
+		const uint8_t piece_index, bool is_complete) {
+	if (piece_index < 0 || piece_index >= state->desc.info.num_pieces) {
+		ERROR("Invalid piece index: %d", piece_index);
+		return;
+	}
+	if (is_complete) {
+		state->piece.completed |= (1 << piece_index);
+	} else {
+		state->piece.completed &= ~(1 << piece_index);
+	}
 }
 
 uint16_t nanotorrent_piece_digest(sha1_context_t *context, const int file,

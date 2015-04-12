@@ -21,6 +21,8 @@ void nanotorrent_piece_init(nanotorrent_torrent_state_t *state);
 void nanotorrent_piece_shutdown(nanotorrent_torrent_state_t *state);
 bool nanotorrent_piece_is_complete(const nanotorrent_torrent_state_t *state,
 		const uint8_t piece_index);
+void nanotorrent_piece_set_complete(const nanotorrent_torrent_state_t *state,
+		const uint8_t piece_index, bool is_complete);
 
 uint16_t nanotorrent_piece_digest(sha1_context_t *context, const int file,
 		const uint16_t piece_size);
