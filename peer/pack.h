@@ -9,6 +9,7 @@
 #define NANOTORRENT_PACK_H_
 
 #include "pack/pack-basic.h"
+#include "pack/pack-peer.h"
 #include "pack/pack-swarm.h"
 #include "pack/pack-torrent.h"
 

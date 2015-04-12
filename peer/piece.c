@@ -97,6 +97,50 @@ void nanotorrent_piece_set_complete(const nanotorrent_torrent_state_t *state,
 	}
 }
 
+uint16_t nanotorrent_piece_read(const nanotorrent_torrent_state_t *state,
+		const uint8_t piece_index, const uint8_t data_offset, uint8_t *buffer,
+		const uint16_t buffer_length) {
+	uint16_t piece_size = nanotorrent_piece_size(&state->desc.info,
+			piece_index);
+	if (piece_size < 0 || data_offset >= piece_size) {
+		return -1;
+	}
+	// Seek to start of requested piece data
+	uint16_t piece_offset = nanotorrent_piece_offset(&state->desc.info,
+			piece_index);
+	uint16_t offset = piece_offset + data_offset;
+	if (cfs_seek(state->piece.file, offset, CFS_SEEK_SET) < 0) {
+		return -1;
+	}
+	// Read piece data into buffer
+	uint16_t data_length = piece_size - data_offset;
+	uint16_t read = cfs_read(state->piece.file, buffer,
+			MIN(buffer_length, data_length));
+	return read;
+}
+
+uint16_t nanotorrent_piece_write(const nanotorrent_torrent_state_t *state,
+		const uint8_t piece_index, const uint8_t data_offset,
+		const uint8_t *buffer, const uint16_t buffer_length) {
+	uint16_t piece_size = nanotorrent_piece_size(&state->desc.info,
+			piece_index);
+	if (piece_size < 0 || data_offset >= piece_size) {
+		return -1;
+	}
+	// Seek to start of provided piece data
+	uint16_t piece_offset = nanotorrent_piece_offset(&state->desc.info,
+			piece_index);
+	uint16_t offset = piece_offset + data_offset;
+	if (cfs_seek(state->piece.file, offset, CFS_SEEK_SET) < 0) {
+		return -1;
+	}
+	// Write buffer into piece data
+	uint16_t data_length = piece_size - data_offset;
+	uint16_t written = cfs_write(state->piece.file, buffer,
+			MIN(buffer_length, data_length));
+	return written;
+}
+
 uint16_t nanotorrent_piece_digest(sha1_context_t *context, const int file,
 		const uint16_t piece_size) {
 	// Process at most piece_size bytes

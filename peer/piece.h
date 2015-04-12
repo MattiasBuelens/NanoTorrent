@@ -24,6 +24,13 @@ bool nanotorrent_piece_is_complete(const nanotorrent_torrent_state_t *state,
 void nanotorrent_piece_set_complete(const nanotorrent_torrent_state_t *state,
 		const uint8_t piece_index, bool is_complete);
 
+uint16_t nanotorrent_piece_read(const nanotorrent_torrent_state_t *state,
+		uint8_t piece_index, uint8_t data_offset, uint8_t *buffer,
+		uint16_t buffer_length);
+uint16_t nanotorrent_piece_write(const nanotorrent_torrent_state_t *state,
+		uint8_t piece_index, uint8_t data_offset, const uint8_t *buffer,
+		uint16_t buffer_length);
+
 uint16_t nanotorrent_piece_digest(sha1_context_t *context, const int file,
 		const uint16_t piece_size);
 
