@@ -52,9 +52,9 @@ typedef struct nanotorrent_piece_state {
 	 */
 	int file;
 	/**
-	 * Bit vector of completed pieces
+	 * Bit vector of completed pieces in own file
 	 */
-	uint32_t completed;
+	uint32_t have;
 } nanotorrent_piece_state_t;
 
 /**

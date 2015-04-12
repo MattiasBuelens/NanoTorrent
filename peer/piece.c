@@ -64,7 +64,7 @@ void nanotorrent_piece_init(nanotorrent_torrent_state_t *state) {
 	state->piece.file = file;
 	// Verify file contents
 	sha1_context_t context;
-	state->piece.completed = nanotorrent_piece_verify_all(state, &context);
+	state->piece.have = nanotorrent_piece_verify_all(state, &context);
 }
 
 void nanotorrent_piece_shutdown(nanotorrent_torrent_state_t *state) {
@@ -81,7 +81,7 @@ bool nanotorrent_piece_is_complete(const nanotorrent_torrent_state_t *state,
 		ERROR("Invalid piece index: %d", piece_index);
 		return false;
 	}
-	return (state->piece.completed >> piece_index) & 1;
+	return (state->piece.have >> piece_index) & 1;
 }
 
 void nanotorrent_piece_set_complete(const nanotorrent_torrent_state_t *state,
@@ -91,9 +91,9 @@ void nanotorrent_piece_set_complete(const nanotorrent_torrent_state_t *state,
 		return;
 	}
 	if (is_complete) {
-		state->piece.completed |= (1 << piece_index);
+		state->piece.have |= (1 << piece_index);
 	} else {
-		state->piece.completed &= ~(1 << piece_index);
+		state->piece.have &= ~(1 << piece_index);
 	}
 }
 
