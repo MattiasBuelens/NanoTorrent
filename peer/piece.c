@@ -35,8 +35,14 @@ uint16_t nanotorrent_piece_size(const nanotorrent_torrent_info_t *info,
 	}
 	if (piece_index == info->num_pieces - 1) {
 		// Size of last piece may be less than piece size
-		uint16_t remainder = info->file_size % info->piece_size;
-		return remainder == 0 ? info->piece_size : remainder;
+		if (piece_index == 0) {
+			// Single piece holding whole file
+			return info->file_size;
+		} else {
+			// Multiple pieces, ensure no piece has zero size
+			uint16_t remainder = info->file_size % info->piece_size;
+			return remainder == 0 ? info->piece_size : remainder;
+		}
 	}
 	return info->piece_size;
 }
