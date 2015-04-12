@@ -84,7 +84,7 @@ bool nanotorrent_piece_is_complete(const nanotorrent_torrent_state_t *state,
 	return (state->piece.have >> piece_index) & 1;
 }
 
-void nanotorrent_piece_set_complete(const nanotorrent_torrent_state_t *state,
+void nanotorrent_piece_set_complete(nanotorrent_torrent_state_t *state,
 		const uint8_t piece_index, bool is_complete) {
 	if (piece_index < 0 || piece_index >= state->desc.info.num_pieces) {
 		ERROR("Invalid piece index: %d", piece_index);
