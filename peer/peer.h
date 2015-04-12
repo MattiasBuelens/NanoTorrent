@@ -16,9 +16,13 @@
  */
 enum nanotracker_peer_message_type {
 	/**
+	 * Peer closes the connection
+	 */
+	NANOTRACKER_PEER_CLOSE = 0,
+	/**
 	 * Peer announces its 'have' state
 	 */
-	NANOTRACKER_PEER_HAVE = 0,
+	NANOTRACKER_PEER_HAVE,
 	/**
 	 * Peer requests piece data
 	 */
@@ -41,6 +45,13 @@ typedef struct nanotorrent_peer_message_header {
 	sha1_digest_t info_hash;
 } nanotorrent_peer_message_header_t;
 
+typedef struct nanotorrent_peer_close {
+	/**
+	 * Message header
+	 */
+	nanotorrent_peer_message_header_t header;
+} nanotorrent_peer_close_t;
+
 typedef struct nanotorrent_peer_have {
 	/**
 	 * Message header
@@ -52,7 +63,22 @@ typedef struct nanotorrent_peer_have {
 	uint32_t have;
 } nanotorrent_peer_have_t;
 
-typedef struct nanotorrent_peer_data_header {
+typedef struct nanotorrent_peer_data_request {
+	/**
+	 * Message header
+	 */
+	nanotorrent_peer_message_header_t header;
+	/**
+	 * Requested piece index
+	 */
+	uint8_t piece_index;
+	/**
+	 * Data offset from piece start
+	 */
+	uint16_t data_start;
+} nanotorrent_peer_data_request_t;
+
+typedef struct nanotorrent_peer_data_reply {
 	/**
 	 * Message header
 	 */
@@ -69,18 +95,20 @@ typedef struct nanotorrent_peer_data_header {
 	 * Data length
 	 */
 	uint16_t data_length;
-} nanotorrent_peer_data_header_t;
+} nanotorrent_peer_data_reply_t;
 
 void nanotorrent_peer_init(nanotorrent_torrent_state_t *state);
 void nanotorrent_peer_shutdown(nanotorrent_torrent_state_t *state);
 
+void nanotorrent_peer_write_close(const nanotorrent_torrent_state_t *state,
+		uint8_t **cur);
 void nanotorrent_peer_write_have(const nanotorrent_torrent_state_t *state,
-		uint8_t **buffer);
+		uint8_t **cur);
 void nanotorrent_peer_write_data_request(
-		const nanotorrent_torrent_state_t *state, uint8_t **buffer,
-		uint8_t piece_index, uint16_t data_start, uint16_t data_length);
+		const nanotorrent_torrent_state_t *state, uint8_t **cur,
+		uint8_t piece_index, uint16_t data_start);
 uint16_t nanotorrent_peer_write_data_reply(
-		const nanotorrent_torrent_state_t *state, uint8_t **buffer,
+		const nanotorrent_torrent_state_t *state, uint8_t **cur,
 		uint16_t buffer_size, uint8_t piece_index, uint16_t data_start);
 
 #endif /* NANOTORRENT_PEER_H_ */

@@ -18,10 +18,10 @@ void nanotorrent_swarm_init(nanotorrent_torrent_state_t *state) {
 	state->swarm.num_peers = 0;
 	memset(&state->swarm.peers, 0, sizeof(state->swarm.peers));
 	// Register tracker socket
-	udp_socket_close(&state->swarm.tracker_socket);
+	struct udp_socket *socket = &state->swarm.tracker_socket;
+	udp_socket_close(socket);
 	// TODO 'state' must be in static memory to be accessible in callback
-	udp_socket_register(&state->swarm.tracker_socket, state,
-			nanotorrent_swarm_handle_reply);
+	udp_socket_register(socket, state, nanotorrent_swarm_handle_reply);
 }
 
 void nanotorrent_swarm_shutdown(nanotorrent_torrent_state_t *state) {

@@ -44,6 +44,16 @@ typedef struct nanotorrent_swarm_state {
 } nanotorrent_swarm_state_t;
 
 /**
+ * Peer state
+ */
+typedef struct nanotorrent_peer_state {
+	/**
+	 * UDP socket with peers
+	 */
+	struct udp_socket peer_socket;
+} nanotorrent_peer_state_t;
+
+/**
  * Piece state
  */
 typedef struct nanotorrent_piece_state {
@@ -81,6 +91,10 @@ typedef struct nanotorrent_torrent_state {
 	 * Swarm state
 	 */
 	nanotorrent_swarm_state_t swarm;
+	/**
+	 * Peer state
+	 */
+	nanotorrent_peer_state_t peer;
 	/**
 	 * Piece state
 	 */
