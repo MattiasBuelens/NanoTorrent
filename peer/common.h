@@ -27,6 +27,11 @@ typedef enum {
 #include "contiki-lib.h"
 #include "contiki-net.h"
 
+/**
+ * Maximum UDP payload size
+ */
+#define NANOTORRENT_MAX_UDP_PAYLOAD_SIZE (UIP_BUFSIZE - UIP_LLH_LEN - UIP_IPUDPH_LEN)
+
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 

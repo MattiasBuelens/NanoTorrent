@@ -52,7 +52,7 @@ void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
 
 	// Reply with (part of) requested data
 	// TODO Send multiple parts with timer?
-	uint8_t reply_buffer[5];
+	uint8_t reply_buffer[NANOTORRENT_MAX_UDP_PAYLOAD_SIZE];
 	uint8_t *reply_cur = reply_buffer;
 	uint16_t data_length = nanotorrent_peer_write_data_reply(&reply_cur,
 			sizeof(reply_buffer), request.piece_index, request.data_start);
