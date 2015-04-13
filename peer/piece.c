@@ -100,7 +100,13 @@ uint16_t nanotorrent_piece_read(const uint8_t piece_index,
 		const uint8_t data_offset, uint8_t *buffer,
 		const uint16_t buffer_length) {
 	uint16_t piece_size = nanotorrent_piece_size(&state.desc.info, piece_index);
-	if (piece_size < 0 || data_offset >= piece_size) {
+	if (piece_size < 0) {
+		ERROR("Invalid piece index: %u", piece_index);
+		return -1;
+	}
+	if (data_offset >= piece_size) {
+		ERROR("Data offset %u exceeds piece size %u for piece index %u",
+				data_offset, piece_size, piece_index);
 		return -1;
 	}
 	// Seek to start of requested piece data
@@ -108,12 +114,17 @@ uint16_t nanotorrent_piece_read(const uint8_t piece_index,
 			piece_index);
 	uint16_t offset = piece_offset + data_offset;
 	if (cfs_seek(state.piece.file, offset, CFS_SEEK_SET) < 0) {
+		ERROR("Could not seek to piece %u at offset %u", piece_index, offset);
 		return -1;
 	}
 	// Read piece data into buffer
 	uint16_t data_length = piece_size - data_offset;
 	uint16_t read = cfs_read(state.piece.file, buffer,
 			MIN(buffer_length, data_length));
+	if (read < 0) {
+		ERROR("Could not read piece %u at offset %u", piece_index, offset);
+		return -1;
+	}
 	return read;
 }
 
@@ -121,7 +132,13 @@ uint16_t nanotorrent_piece_write(const uint8_t piece_index,
 		const uint8_t data_offset, const uint8_t *buffer,
 		const uint16_t buffer_length) {
 	uint16_t piece_size = nanotorrent_piece_size(&state.desc.info, piece_index);
-	if (piece_size < 0 || data_offset >= piece_size) {
+	if (piece_size < 0) {
+		ERROR("Invalid piece index: %u", piece_index);
+		return -1;
+	}
+	if (data_offset >= piece_size) {
+		ERROR("Data offset %u exceeds piece size %u for piece index %u",
+				data_offset, piece_size, piece_index);
 		return -1;
 	}
 	// Seek to start of provided piece data
@@ -129,12 +146,17 @@ uint16_t nanotorrent_piece_write(const uint8_t piece_index,
 			piece_index);
 	uint16_t offset = piece_offset + data_offset;
 	if (cfs_seek(state.piece.file, offset, CFS_SEEK_SET) < 0) {
+		ERROR("Could not seek to piece %u at offset %u", piece_index, offset);
 		return -1;
 	}
 	// Write buffer into piece data
 	uint16_t data_length = piece_size - data_offset;
 	uint16_t written = cfs_write(state.piece.file, buffer,
 			MIN(buffer_length, data_length));
+	if (written < 0) {
+		ERROR("Could not write piece %u at offset %u", piece_index, offset);
+		return -1;
+	}
 	return written;
 }
 
