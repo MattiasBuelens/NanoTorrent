@@ -8,28 +8,29 @@
 #include "swarm.h"
 #include "pack.h"
 
+#define state (&nanotorrent_state)
+
 void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 		void *ptr, const uip_ipaddr_t *src_addr, uint16_t src_port,
 		const uip_ipaddr_t *dest_addr, uint16_t dest_port, const uint8_t *data,
 		uint16_t datalen);
 
-void nanotorrent_swarm_init(nanotorrent_torrent_state_t *state) {
+void nanotorrent_swarm_init() {
 	// Clear connected peers
 	state->swarm.num_peers = 0;
 	memset(&state->swarm.peers, 0, sizeof(state->swarm.peers));
 	// Register tracker socket
 	struct udp_socket *socket = &state->swarm.tracker_socket;
 	udp_socket_close(socket);
-	// TODO 'state' must be in static memory to be accessible in callback
-	udp_socket_register(socket, state, nanotorrent_swarm_handle_reply);
+	udp_socket_register(socket, NULL, nanotorrent_swarm_handle_reply);
 }
 
-void nanotorrent_swarm_shutdown(nanotorrent_torrent_state_t *state) {
+void nanotorrent_swarm_shutdown() {
 	// Close tracker socket
 	udp_socket_close(&state->swarm.tracker_socket);
 }
 
-void nanotorrent_swarm_join(nanotorrent_torrent_state_t *state) {
+void nanotorrent_swarm_join() {
 	nanotorrent_announce_request_t request;
 	PRINTF("Join swarm with tracker [");
 	PRINT6ADDR(&state->desc.tracker_ip);
@@ -68,7 +69,6 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 		const uip_ipaddr_t *dest_addr, uint16_t dest_port, const uint8_t *data,
 		uint16_t datalen) {
 	nanotorrent_announce_reply_t reply;
-	nanotorrent_torrent_state_t *state = ptr;
 	const uint8_t *cur = data;
 	int i;
 

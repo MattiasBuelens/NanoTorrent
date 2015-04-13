@@ -97,18 +97,14 @@ typedef struct nanotorrent_peer_data_reply {
 	uint16_t data_length;
 } nanotorrent_peer_data_reply_t;
 
-void nanotorrent_peer_init(nanotorrent_torrent_state_t *state);
-void nanotorrent_peer_shutdown(nanotorrent_torrent_state_t *state);
+void nanotorrent_peer_init();
+void nanotorrent_peer_shutdown();
 
-void nanotorrent_peer_write_close(const nanotorrent_torrent_state_t *state,
-		uint8_t **cur);
-void nanotorrent_peer_write_have(const nanotorrent_torrent_state_t *state,
-		uint8_t **cur);
-void nanotorrent_peer_write_data_request(
-		const nanotorrent_torrent_state_t *state, uint8_t **cur,
+void nanotorrent_peer_write_close(uint8_t **cur);
+void nanotorrent_peer_write_have(uint8_t **cur);
+void nanotorrent_peer_write_data_request(uint8_t **cur, uint8_t piece_index,
+		uint16_t data_start);
+uint16_t nanotorrent_peer_write_data_reply(uint8_t **cur, uint16_t buffer_size,
 		uint8_t piece_index, uint16_t data_start);
-uint16_t nanotorrent_peer_write_data_reply(
-		const nanotorrent_torrent_state_t *state, uint8_t **cur,
-		uint16_t buffer_size, uint8_t piece_index, uint16_t data_start);
 
 #endif /* NANOTORRENT_PEER_H_ */

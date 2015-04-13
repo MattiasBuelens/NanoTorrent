@@ -101,4 +101,9 @@ typedef struct nanotorrent_torrent_state {
 	nanotorrent_piece_state_t piece;
 } nanotorrent_torrent_state_t;
 
+/**
+ * Global state.
+ */
+extern nanotorrent_torrent_state_t nanotorrent_state;
+
 #endif /* NANOTORRENT_STATE_H_ */

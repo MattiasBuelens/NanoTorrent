@@ -8,6 +8,8 @@
 #include "piece.h"
 #include "cfs/cfs.h"
 
+#define state (&nanotorrent_state)
+
 // TODO: Better way to find if Coffee is actually used?
 #ifdef __AVR__
 #include "cfs/cfs-coffee.h"
@@ -47,7 +49,7 @@ uint16_t nanotorrent_piece_size(const nanotorrent_torrent_info_t *info,
 	return info->piece_size;
 }
 
-void nanotorrent_piece_init(nanotorrent_torrent_state_t *state) {
+void nanotorrent_piece_init() {
 	// Reserve space for file
 	int result = CFS_RESERVE(state->file_name, state->desc.info.file_size);
 	if (result == -1) {
@@ -64,10 +66,10 @@ void nanotorrent_piece_init(nanotorrent_torrent_state_t *state) {
 	state->piece.file = file;
 	// Verify file contents
 	sha1_context_t context;
-	state->piece.have = nanotorrent_piece_verify_all(state, &context);
+	state->piece.have = nanotorrent_piece_verify_all(&context);
 }
 
-void nanotorrent_piece_shutdown(nanotorrent_torrent_state_t *state) {
+void nanotorrent_piece_shutdown() {
 	// Close file
 	if (state->piece.file >= 0) {
 		cfs_close(state->piece.file);
@@ -75,8 +77,7 @@ void nanotorrent_piece_shutdown(nanotorrent_torrent_state_t *state) {
 	state->piece.file = -1;
 }
 
-bool nanotorrent_piece_is_complete(const nanotorrent_torrent_state_t *state,
-		const uint8_t piece_index) {
+bool nanotorrent_piece_is_complete(const uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= state->desc.info.num_pieces) {
 		ERROR("Invalid piece index: %d", piece_index);
 		return false;
@@ -84,8 +85,7 @@ bool nanotorrent_piece_is_complete(const nanotorrent_torrent_state_t *state,
 	return (state->piece.have >> piece_index) & 1;
 }
 
-void nanotorrent_piece_set_complete(nanotorrent_torrent_state_t *state,
-		const uint8_t piece_index, bool is_complete) {
+void nanotorrent_piece_set_complete(const uint8_t piece_index, bool is_complete) {
 	if (piece_index < 0 || piece_index >= state->desc.info.num_pieces) {
 		ERROR("Invalid piece index: %d", piece_index);
 		return;
@@ -97,8 +97,8 @@ void nanotorrent_piece_set_complete(nanotorrent_torrent_state_t *state,
 	}
 }
 
-uint16_t nanotorrent_piece_read(const nanotorrent_torrent_state_t *state,
-		const uint8_t piece_index, const uint8_t data_offset, uint8_t *buffer,
+uint16_t nanotorrent_piece_read(const uint8_t piece_index,
+		const uint8_t data_offset, uint8_t *buffer,
 		const uint16_t buffer_length) {
 	uint16_t piece_size = nanotorrent_piece_size(&state->desc.info,
 			piece_index);
@@ -119,9 +119,9 @@ uint16_t nanotorrent_piece_read(const nanotorrent_torrent_state_t *state,
 	return read;
 }
 
-uint16_t nanotorrent_piece_write(const nanotorrent_torrent_state_t *state,
-		const uint8_t piece_index, const uint8_t data_offset,
-		const uint8_t *buffer, const uint16_t buffer_length) {
+uint16_t nanotorrent_piece_write(const uint8_t piece_index,
+		const uint8_t data_offset, const uint8_t *buffer,
+		const uint16_t buffer_length) {
 	uint16_t piece_size = nanotorrent_piece_size(&state->desc.info,
 			piece_index);
 	if (piece_size < 0 || data_offset >= piece_size) {
@@ -169,8 +169,8 @@ uint16_t nanotorrent_piece_digest(sha1_context_t *context, const int file,
 	return length;
 }
 
-bool nanotorrent_piece_verify(const nanotorrent_torrent_state_t *state,
-		sha1_context_t *context, const uint8_t piece_index) {
+bool nanotorrent_piece_verify(sha1_context_t *context,
+		const uint8_t piece_index) {
 	uint16_t offset = nanotorrent_piece_offset(&state->desc.info, piece_index);
 	if (offset < 0) {
 		return false;
@@ -196,12 +196,11 @@ bool nanotorrent_piece_verify(const nanotorrent_torrent_state_t *state,
 	return sha1_cmp(&digest, &state->desc.info.piece_hashes[piece_index]);
 }
 
-uint32_t nanotorrent_piece_verify_all(const nanotorrent_torrent_state_t *state,
-		sha1_context_t *context) {
+uint32_t nanotorrent_piece_verify_all(sha1_context_t *context) {
 	uint32_t result = 0;
 	uint8_t i;
 	for (i = 0; i < state->desc.info.num_pieces; i++) {
-		bool piece_result = nanotorrent_piece_verify(state, context, i);
+		bool piece_result = nanotorrent_piece_verify(context, i);
 		result |= piece_result << i;
 	}
 	return result;

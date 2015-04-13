@@ -71,9 +71,9 @@ typedef struct nanotorrent_announce_reply {
 	uint8_t num_peers;
 } nanotorrent_announce_reply_t;
 
-void nanotorrent_swarm_init(nanotorrent_torrent_state_t *state);
-void nanotorrent_swarm_shutdown(nanotorrent_torrent_state_t *state);
+void nanotorrent_swarm_init();
+void nanotorrent_swarm_shutdown();
 
-void nanotorrent_swarm_join(nanotorrent_torrent_state_t *state);
+void nanotorrent_swarm_join();
 
 #endif /* NANOTORRENT_SWARM_H_ */
