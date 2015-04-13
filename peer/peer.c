@@ -9,7 +9,7 @@
 #include "piece.h"
 #include "pack.h"
 
-#define state (&nanotorrent_state)
+#define state (nanotorrent_state)
 
 void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 		const uip_ipaddr_t *src_addr, uint16_t src_port,
@@ -18,21 +18,21 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 
 void nanotorrent_peer_init() {
 	// Register peer socket
-	struct udp_socket *socket = &state->peer.peer_socket;
+	struct udp_socket *socket = &state.peer.peer_socket;
 	udp_socket_close(socket);
 	udp_socket_register(socket, NULL, nanotorrent_peer_handle_message);
 	// Store listen port
-	state->listen_port = socket->udp_conn->lport;
+	state.listen_port = socket->udp_conn->lport;
 }
 
 void nanotorrent_peer_shutdown() {
 	// Close peer socket
-	udp_socket_close(&state->peer.peer_socket);
+	udp_socket_close(&state.peer.peer_socket);
 }
 
 void nanotorrent_peer_send_message(const uint8_t *buffer,
 		uint16_t buffer_length, const nanotorrent_peer_info_t *remote_peer) {
-	udp_socket_sendto(&state->peer.peer_socket, buffer, buffer_length,
+	udp_socket_sendto(&state.peer.peer_socket, buffer, buffer_length,
 			&remote_peer->peer_ip, remote_peer->peer_port);
 }
 
@@ -76,7 +76,7 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 	nanotorrent_unpack_peer_message_header(&cur, &header);
 
 	// Compare torrent info hash
-	if (!sha1_cmp(&state->info_hash, &header.info_hash)) {
+	if (!sha1_cmp(&state.info_hash, &header.info_hash)) {
 		WARN("Ignoring peer message for unknown torrent ");
 		sha1_print(&header.info_hash);
 		PRINTF("\n");
@@ -108,7 +108,7 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 
 CC_INLINE void nanotorrent_peer_make_header(
 		nanotorrent_peer_message_header_t *header, uint8_t type) {
-	sha1_copy(&header->info_hash, &state->info_hash);
+	sha1_copy(&header->info_hash, &state.info_hash);
 	header->type = type;
 }
 
@@ -122,7 +122,7 @@ void nanotorrent_peer_write_close(uint8_t **cur) {
 void nanotorrent_peer_write_have(uint8_t **cur) {
 	nanotorrent_peer_have_t message;
 	nanotorrent_peer_make_header(&message.header, NANOTRACKER_PEER_HAVE);
-	message.have = state->piece.have;
+	message.have = state.piece.have;
 
 	nanotorrent_pack_peer_have(cur, &message);
 }

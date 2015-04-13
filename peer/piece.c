@@ -8,7 +8,7 @@
 #include "piece.h"
 #include "cfs/cfs.h"
 
-#define state (&nanotorrent_state)
+#define state (nanotorrent_state)
 
 // TODO: Better way to find if Coffee is actually used?
 #ifdef __AVR__
@@ -51,70 +51,68 @@ uint16_t nanotorrent_piece_size(const nanotorrent_torrent_info_t *info,
 
 void nanotorrent_piece_init() {
 	// Reserve space for file
-	int result = CFS_RESERVE(state->file_name, state->desc.info.file_size);
+	int result = CFS_RESERVE(state.file_name, state.desc.info.file_size);
 	if (result == -1) {
-		ERROR("Could not reserve %d bytes for file",
-				state->desc.info.file_size);
+		ERROR("Could not reserve %d bytes for file", state.desc.info.file_size);
 		return;
 	}
 	// Open file
-	int file = cfs_open(state->file_name, CFS_READ | CFS_WRITE | CFS_APPEND);
+	int file = cfs_open(state.file_name, CFS_READ | CFS_WRITE | CFS_APPEND);
 	if (file < 0) {
 		ERROR("Could not open file");
 		return;
 	}
-	state->piece.file = file;
+	state.piece.file = file;
 	// Verify file contents
 	sha1_context_t context;
-	state->piece.have = nanotorrent_piece_verify_all(&context);
+	state.piece.have = nanotorrent_piece_verify_all(&context);
 }
 
 void nanotorrent_piece_shutdown() {
 	// Close file
-	if (state->piece.file >= 0) {
-		cfs_close(state->piece.file);
+	if (state.piece.file >= 0) {
+		cfs_close(state.piece.file);
 	}
-	state->piece.file = -1;
+	state.piece.file = -1;
 }
 
 bool nanotorrent_piece_is_complete(const uint8_t piece_index) {
-	if (piece_index < 0 || piece_index >= state->desc.info.num_pieces) {
+	if (piece_index < 0 || piece_index >= state.desc.info.num_pieces) {
 		ERROR("Invalid piece index: %d", piece_index);
 		return false;
 	}
-	return (state->piece.have >> piece_index) & 1;
+	return (state.piece.have >> piece_index) & 1;
 }
 
 void nanotorrent_piece_set_complete(const uint8_t piece_index, bool is_complete) {
-	if (piece_index < 0 || piece_index >= state->desc.info.num_pieces) {
+	if (piece_index < 0 || piece_index >= state.desc.info.num_pieces) {
 		ERROR("Invalid piece index: %d", piece_index);
 		return;
 	}
 	if (is_complete) {
-		state->piece.have |= (1 << piece_index);
+		state.piece.have |= (1 << piece_index);
 	} else {
-		state->piece.have &= ~(1 << piece_index);
+		state.piece.have &= ~(1 << piece_index);
 	}
 }
 
 uint16_t nanotorrent_piece_read(const uint8_t piece_index,
 		const uint8_t data_offset, uint8_t *buffer,
 		const uint16_t buffer_length) {
-	uint16_t piece_size = nanotorrent_piece_size(&state->desc.info,
-			piece_index);
+	uint16_t piece_size = nanotorrent_piece_size(&state.desc.info, piece_index);
 	if (piece_size < 0 || data_offset >= piece_size) {
 		return -1;
 	}
 	// Seek to start of requested piece data
-	uint16_t piece_offset = nanotorrent_piece_offset(&state->desc.info,
+	uint16_t piece_offset = nanotorrent_piece_offset(&state.desc.info,
 			piece_index);
 	uint16_t offset = piece_offset + data_offset;
-	if (cfs_seek(state->piece.file, offset, CFS_SEEK_SET) < 0) {
+	if (cfs_seek(state.piece.file, offset, CFS_SEEK_SET) < 0) {
 		return -1;
 	}
 	// Read piece data into buffer
 	uint16_t data_length = piece_size - data_offset;
-	uint16_t read = cfs_read(state->piece.file, buffer,
+	uint16_t read = cfs_read(state.piece.file, buffer,
 			MIN(buffer_length, data_length));
 	return read;
 }
@@ -122,21 +120,20 @@ uint16_t nanotorrent_piece_read(const uint8_t piece_index,
 uint16_t nanotorrent_piece_write(const uint8_t piece_index,
 		const uint8_t data_offset, const uint8_t *buffer,
 		const uint16_t buffer_length) {
-	uint16_t piece_size = nanotorrent_piece_size(&state->desc.info,
-			piece_index);
+	uint16_t piece_size = nanotorrent_piece_size(&state.desc.info, piece_index);
 	if (piece_size < 0 || data_offset >= piece_size) {
 		return -1;
 	}
 	// Seek to start of provided piece data
-	uint16_t piece_offset = nanotorrent_piece_offset(&state->desc.info,
+	uint16_t piece_offset = nanotorrent_piece_offset(&state.desc.info,
 			piece_index);
 	uint16_t offset = piece_offset + data_offset;
-	if (cfs_seek(state->piece.file, offset, CFS_SEEK_SET) < 0) {
+	if (cfs_seek(state.piece.file, offset, CFS_SEEK_SET) < 0) {
 		return -1;
 	}
 	// Write buffer into piece data
 	uint16_t data_length = piece_size - data_offset;
-	uint16_t written = cfs_write(state->piece.file, buffer,
+	uint16_t written = cfs_write(state.piece.file, buffer,
 			MIN(buffer_length, data_length));
 	return written;
 }
@@ -171,13 +168,13 @@ uint16_t nanotorrent_piece_digest(sha1_context_t *context, const int file,
 
 bool nanotorrent_piece_verify(sha1_context_t *context,
 		const uint8_t piece_index) {
-	uint16_t offset = nanotorrent_piece_offset(&state->desc.info, piece_index);
+	uint16_t offset = nanotorrent_piece_offset(&state.desc.info, piece_index);
 	if (offset < 0) {
 		return false;
 	}
-	uint16_t size = nanotorrent_piece_size(&state->desc.info, piece_index);
+	uint16_t size = nanotorrent_piece_size(&state.desc.info, piece_index);
 	// Seek to start of piece
-	int file = state->piece.file;
+	int file = state.piece.file;
 	if (cfs_seek(file, offset, CFS_SEEK_SET) < 0) {
 		return false;
 	}
@@ -193,13 +190,13 @@ bool nanotorrent_piece_verify(sha1_context_t *context,
 		return false;
 	}
 	// Compare calculated hash with expected hash
-	return sha1_cmp(&digest, &state->desc.info.piece_hashes[piece_index]);
+	return sha1_cmp(&digest, &state.desc.info.piece_hashes[piece_index]);
 }
 
 uint32_t nanotorrent_piece_verify_all(sha1_context_t *context) {
 	uint32_t result = 0;
 	uint8_t i;
-	for (i = 0; i < state->desc.info.num_pieces; i++) {
+	for (i = 0; i < state.desc.info.num_pieces; i++) {
 		bool piece_result = nanotorrent_piece_verify(context, i);
 		result |= piece_result << i;
 	}

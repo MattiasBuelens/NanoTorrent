@@ -8,7 +8,7 @@
 #include "swarm.h"
 #include "pack.h"
 
-#define state (&nanotorrent_state)
+#define state (nanotorrent_state)
 
 void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 		void *ptr, const uip_ipaddr_t *src_addr, uint16_t src_port,
@@ -17,24 +17,24 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 
 void nanotorrent_swarm_init() {
 	// Clear connected peers
-	state->swarm.num_peers = 0;
-	memset(&state->swarm.peers, 0, sizeof(state->swarm.peers));
+	state.swarm.num_peers = 0;
+	memset(&state.swarm.peers, 0, sizeof(state.swarm.peers));
 	// Register tracker socket
-	struct udp_socket *socket = &state->swarm.tracker_socket;
+	struct udp_socket *socket = &state.swarm.tracker_socket;
 	udp_socket_close(socket);
 	udp_socket_register(socket, NULL, nanotorrent_swarm_handle_reply);
 }
 
 void nanotorrent_swarm_shutdown() {
 	// Close tracker socket
-	udp_socket_close(&state->swarm.tracker_socket);
+	udp_socket_close(&state.swarm.tracker_socket);
 }
 
 void nanotorrent_swarm_join() {
 	nanotorrent_announce_request_t request;
 	PRINTF("Join swarm with tracker [");
-	PRINT6ADDR(&state->desc.tracker_ip);
-	PRINTF("]:%u\n", state->desc.tracker_port);
+	PRINT6ADDR(&state.desc.tracker_ip);
+	PRINTF("]:%u\n", state.desc.tracker_port);
 
 	// Get own global IP
 	uip_ds6_addr_t *global_address = uip_ds6_get_global(-1);
@@ -44,15 +44,15 @@ void nanotorrent_swarm_join() {
 	}
 
 	// Create announce request
-	sha1_copy(&request.info_hash, &state->info_hash);
+	sha1_copy(&request.info_hash, &state.info_hash);
 	uip_ip6addr_copy(&request.peer_info.peer_ip, &global_address->ipaddr);
-	request.peer_info.peer_port = state->listen_port;
+	request.peer_info.peer_port = state.listen_port;
 	request.num_want = NANOTORRENT_MAX_PEERS;
 	request.event = NANOTRACKER_ANNOUNCE_STARTED;
 
 	// Connect to tracker
-	udp_socket_connect(&state->swarm.tracker_socket, &state->desc.tracker_ip,
-			state->desc.tracker_port);
+	udp_socket_connect(&state.swarm.tracker_socket, &state.desc.tracker_ip,
+	state.desc.tracker_port);
 
 	// Pack request
 	uint8_t data[sizeof(request)];
@@ -61,7 +61,7 @@ void nanotorrent_swarm_join() {
 	uint16_t len = cur - data;
 
 	// Send request
-	udp_socket_send(&state->swarm.tracker_socket, data, len);
+	udp_socket_send(&state.swarm.tracker_socket, data, len);
 }
 
 void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
@@ -76,7 +76,7 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 	nanotorrent_unpack_announce_reply(&cur, &reply);
 
 	// Compare torrent info hash
-	if (!sha1_cmp(&state->info_hash, &reply.info_hash)) {
+	if (!sha1_cmp(&state.info_hash, &reply.info_hash)) {
 		WARN("Ignoring reply for unknown torrent");
 		sha1_print(&reply.info_hash);
 		PRINTF("\n");
@@ -84,14 +84,14 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 	}
 
 	// Update number of peers
-	state->swarm.num_peers = MIN(reply.num_peers, NANOTORRENT_MAX_PEERS);
+	state.swarm.num_peers = MIN(reply.num_peers, NANOTORRENT_MAX_PEERS);
 	// Read peers into state
-	for (i = 0; i < state->swarm.num_peers; i++) {
-		nanotorrent_unpack_peer_info(&cur, &state->swarm.peers[i]);
+	for (i = 0; i < state.swarm.num_peers; i++) {
+		nanotorrent_unpack_peer_info(&cur, &state.swarm.peers[i]);
 	}
 
 	// Close tracker socket
-	udp_socket_close(&state->swarm.tracker_socket);
+	udp_socket_close(&state.swarm.tracker_socket);
 
 	// TODO Start connecting with peers
 }
