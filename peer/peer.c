@@ -22,7 +22,8 @@ void nanotorrent_peer_init() {
 	udp_socket_close(socket);
 	udp_socket_register(socket, NULL, nanotorrent_peer_handle_message);
 	// Store listen port
-	state.listen_port = socket->udp_conn->lport;
+	state.listen_port = uip_ntohs(socket->udp_conn->lport);
+	PRINTF("Listening for peers on port %u\n", state.listen_port);
 }
 
 void nanotorrent_peer_shutdown() {
