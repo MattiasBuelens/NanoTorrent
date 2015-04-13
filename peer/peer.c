@@ -65,6 +65,29 @@ void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
 	nanotorrent_peer_send_message(reply_buffer, reply_length, remote_peer);
 }
 
+void nanotorrent_peer_handle_data_reply(const uint8_t *buffer,
+		uint16_t buffer_length, const nanotorrent_peer_info_t *remote_peer) {
+	nanotorrent_peer_data_t reply;
+
+	// Parse reply header
+	const uint8_t *cur = buffer;
+	nanotorrent_unpack_peer_data(&cur, &reply);
+	uint16_t header_length = cur - buffer;
+
+	// Ignore if we already have piece
+	if (nanotorrent_piece_is_complete(reply.piece_index)) {
+		return;
+	}
+
+	const uint8_t *data = cur;
+	uint16_t data_length = buffer_length - header_length;
+	uint16_t written = nanotorrent_piece_write(reply.piece_index,
+			reply.data_start, data, data_length);
+	if (written < 0) {
+		return;
+	}
+}
+
 void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 		const uip_ipaddr_t *src_addr, uint16_t src_port,
 		const uip_ipaddr_t *dest_addr, uint16_t dest_port, const uint8_t *data,
@@ -99,6 +122,7 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 		nanotorrent_peer_handle_data_request(data, datalen, &remote_peer);
 		break;
 	case NANOTRACKER_PEER_DATA_REPLY:
+		nanotorrent_peer_handle_data_reply(data, datalen, &remote_peer);
 		break;
 	default:
 		WARN("Ignoring peer message with unknown type %u", header.type);
