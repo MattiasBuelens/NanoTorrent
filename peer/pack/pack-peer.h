@@ -28,16 +28,10 @@ void nanotorrent_pack_peer_have(uint8_t **cur,
 void nanotorrent_unpack_peer_have(const uint8_t **cur,
 		nanotorrent_peer_have_t *message);
 
-void nanotorrent_pack_peer_data_request(uint8_t **cur,
-		const nanotorrent_peer_data_request_t *message);
+void nanotorrent_pack_peer_data(uint8_t **cur,
+		const nanotorrent_peer_data_t *message);
 
-void nanotorrent_unpack_peer_data_request(const uint8_t **cur,
-		nanotorrent_peer_data_request_t *message);
-
-void nanotorrent_pack_peer_data_reply(uint8_t **cur,
-		const nanotorrent_peer_data_reply_t *message);
-
-void nanotorrent_unpack_peer_data_reply(const uint8_t **cur,
-		nanotorrent_peer_data_reply_t *message);
+void nanotorrent_unpack_peer_data(const uint8_t **cur,
+		nanotorrent_peer_data_t *message);
 
 #endif /* NANOTORRENT_PACK_PEER_H_ */

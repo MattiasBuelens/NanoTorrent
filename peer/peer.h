@@ -63,7 +63,7 @@ typedef struct nanotorrent_peer_have {
 	uint32_t have;
 } nanotorrent_peer_have_t;
 
-typedef struct nanotorrent_peer_data_request {
+typedef struct nanotorrent_peer_data {
 	/**
 	 * Message header
 	 */
@@ -76,26 +76,7 @@ typedef struct nanotorrent_peer_data_request {
 	 * Data offset from piece start
 	 */
 	uint16_t data_start;
-} nanotorrent_peer_data_request_t;
-
-typedef struct nanotorrent_peer_data_reply {
-	/**
-	 * Message header
-	 */
-	nanotorrent_peer_message_header_t header;
-	/**
-	 * Requested piece index
-	 */
-	uint8_t piece_index;
-	/**
-	 * Data offset from piece start
-	 */
-	uint16_t data_start;
-	/**
-	 * Data length
-	 */
-	uint16_t data_length;
-} nanotorrent_peer_data_reply_t;
+} nanotorrent_peer_data_t;
 
 void nanotorrent_peer_init();
 void nanotorrent_peer_shutdown();

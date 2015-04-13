@@ -38,11 +38,11 @@ void nanotorrent_peer_send_message(const uint8_t *buffer,
 
 void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
 		uint16_t buffer_length, const nanotorrent_peer_info_t *remote_peer) {
-	nanotorrent_peer_data_request_t request;
+	nanotorrent_peer_data_t request;
 
 	// Parse request header
 	const uint8_t *cur = buffer;
-	nanotorrent_unpack_peer_data_request(&cur, &request);
+	nanotorrent_unpack_peer_data(&cur, &request);
 
 	// Check if we have requested piece
 	if (!nanotorrent_piece_is_complete(request.piece_index)) {
@@ -129,26 +129,25 @@ void nanotorrent_peer_write_have(uint8_t **cur) {
 
 void nanotorrent_peer_write_data_request(uint8_t **cur, uint8_t piece_index,
 		uint16_t data_start) {
-	nanotorrent_peer_data_request_t request;
+	nanotorrent_peer_data_t request;
 	nanotorrent_peer_make_header(&request.header,
 			NANOTRACKER_PEER_DATA_REQUEST);
 	request.piece_index = piece_index;
 	request.data_start = data_start;
 
-	nanotorrent_pack_peer_data_request(cur, &request);
+	nanotorrent_pack_peer_data(cur, &request);
 }
 
 uint16_t nanotorrent_peer_write_data_reply(uint8_t **cur, uint16_t buffer_size,
 		uint8_t piece_index, uint16_t data_start) {
-	// Write initial reply header with zero data length
-	nanotorrent_peer_data_reply_t reply;
+	// Write header
+	nanotorrent_peer_data_t reply;
 	nanotorrent_peer_make_header(&reply.header, NANOTRACKER_PEER_DATA_REPLY);
 	reply.piece_index = piece_index;
 	reply.data_start = data_start;
-	reply.data_length = 0;
 
 	uint8_t *header_start = *cur;
-	nanotorrent_pack_peer_data_reply(cur, &reply);
+	nanotorrent_pack_peer_data(cur, &reply);
 	uint8_t *header_end = *cur;
 	uint16_t header_length = header_end - header_start;
 
@@ -160,9 +159,6 @@ uint16_t nanotorrent_peer_write_data_reply(uint8_t **cur, uint16_t buffer_size,
 	}
 	*cur += data_length;
 
-	// Write actual data length
-	uint8_t *data_length_ptr = header_end - sizeof(data_length);
-	nanotorrent_pack_uint16(&data_length_ptr, &data_length);
-
+	// Return number of data bytes in reply
 	return data_length;
 }
