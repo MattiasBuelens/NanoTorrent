@@ -10,14 +10,6 @@
 
 #define state (nanotorrent_state)
 
-// TODO: Better way to find if Coffee is actually used?
-#ifdef __AVR__
-#include "cfs/cfs-coffee.h"
-#define CFS_RESERVE(name, size) (cfs_coffee_reserve(name, size))
-#else
-#define CFS_RESERVE(...) (0)
-#endif
-
 #define NANOTORRENT_PIECE_BUFFER_SIZE 256
 
 uint16_t nanotorrent_piece_offset(const nanotorrent_torrent_info_t *info,
@@ -50,12 +42,6 @@ uint16_t nanotorrent_piece_size(const nanotorrent_torrent_info_t *info,
 }
 
 void nanotorrent_piece_init() {
-	// Reserve space for file
-	int result = CFS_RESERVE(state.file_name, state.desc.info.file_size);
-	if (result == -1) {
-		ERROR("Could not reserve %u bytes for file", state.desc.info.file_size);
-		return;
-	}
 	// Open file
 	int file = cfs_open(state.file_name, CFS_READ | CFS_WRITE | CFS_APPEND);
 	if (file < 0) {
