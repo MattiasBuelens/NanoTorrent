@@ -23,7 +23,7 @@
 uint16_t nanotorrent_piece_offset(const nanotorrent_torrent_info_t *info,
 		const uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= info->num_pieces) {
-		ERROR("Invalid piece index: %d", piece_index);
+		ERROR("Invalid piece index: %u", piece_index);
 		return -1;
 	}
 	return piece_index * info->piece_size;
@@ -32,7 +32,7 @@ uint16_t nanotorrent_piece_offset(const nanotorrent_torrent_info_t *info,
 uint16_t nanotorrent_piece_size(const nanotorrent_torrent_info_t *info,
 		const uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= info->num_pieces) {
-		ERROR("Invalid piece index: %d", piece_index);
+		ERROR("Invalid piece index: %u", piece_index);
 		return -1;
 	}
 	if (piece_index == info->num_pieces - 1) {
@@ -53,7 +53,7 @@ void nanotorrent_piece_init() {
 	// Reserve space for file
 	int result = CFS_RESERVE(state.file_name, state.desc.info.file_size);
 	if (result == -1) {
-		ERROR("Could not reserve %d bytes for file", state.desc.info.file_size);
+		ERROR("Could not reserve %u bytes for file", state.desc.info.file_size);
 		return;
 	}
 	// Open file
@@ -78,7 +78,7 @@ void nanotorrent_piece_shutdown() {
 
 bool nanotorrent_piece_is_complete(const uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= state.desc.info.num_pieces) {
-		ERROR("Invalid piece index: %d", piece_index);
+		ERROR("Invalid piece index: %u", piece_index);
 		return false;
 	}
 	return (state.piece.have >> piece_index) & 1;
@@ -86,7 +86,7 @@ bool nanotorrent_piece_is_complete(const uint8_t piece_index) {
 
 void nanotorrent_piece_set_complete(const uint8_t piece_index, bool is_complete) {
 	if (piece_index < 0 || piece_index >= state.desc.info.num_pieces) {
-		ERROR("Invalid piece index: %d", piece_index);
+		ERROR("Invalid piece index: %u", piece_index);
 		return;
 	}
 	if (is_complete) {
@@ -186,7 +186,7 @@ bool nanotorrent_piece_verify(sha1_context_t *context,
 		return false;
 	}
 	if (!sha1_result(context, &digest)) {
-		ERROR("Could not calculate digest of piece %d", piece_index);
+		ERROR("Could not calculate digest of piece %u", piece_index);
 		return false;
 	}
 	// Compare calculated hash with expected hash

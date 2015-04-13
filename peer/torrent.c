@@ -49,7 +49,7 @@ bool nanotorrent_torrent_info_create(nanotorrent_torrent_info_t *info,
 			PRINTF("Piece %u: %u\n", piece_index, piece_length);
 			// Calculate and store digest
 			if (!sha1_result(&context, &info->piece_hashes[piece_index])) {
-				ERROR("Could not calculate digest of piece %d", piece_index);
+				ERROR("Could not calculate digest of piece %u", piece_index);
 				return false;
 			}
 			piece_index++;
