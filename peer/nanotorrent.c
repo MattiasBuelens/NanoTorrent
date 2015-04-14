@@ -29,10 +29,11 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 	PROCESS_BEGIN()
 
 		printf("NanoTorrent\n");
+		printf("===========\n");
+		printf("\n");
 
 		// Initialize descriptor
-		uip_ip6addr(&state.desc.tracker_ip, 0xaaaa, 0x0, 0x0, 0x0, 0x1, 0x2,
-				0x3, 0x4);
+		uiplib_ip6addrconv("aaaa::1", &state.desc.tracker_ip);
 		state.desc.tracker_port = 33333;
 		state.desc.info.file_size = (1 << 12);
 		state.desc.info.piece_size = (1 << 8);
@@ -40,11 +41,13 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		strncpy(state.file_name, "myprogram",
 				NANOTORRENT_FILE_NAME_LENGTH - 1);
 
+		printf("Initializing...\n");
 		nanotorrent_piece_init();
 		nanotorrent_peer_init();
 		nanotorrent_swarm_init();
 
 		// Wait until we have a global IPv6 address
+		printf("Waiting for global address...\n");
 		etimer_set(&addr_poll, NANOTORRENT_ADDR_POLL_PERIOD);
 		while (uip_ds6_get_global(-1) == NULL) {
 			etimer_reset(&addr_poll);
@@ -54,6 +57,7 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		// Join the swarm
 		nanotorrent_swarm_join();
 
+		printf("Shutting down...\n");
 		nanotorrent_swarm_shutdown();
 		nanotorrent_peer_shutdown();
 		nanotorrent_piece_shutdown();
