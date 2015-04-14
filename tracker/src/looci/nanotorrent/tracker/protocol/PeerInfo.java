@@ -6,9 +6,9 @@ import java.nio.ByteBuffer;
 public final class PeerInfo {
 
 	private final Inet6Address address;
-	private final short port;
+	private final int port;
 
-	public PeerInfo(Inet6Address address, short port) {
+	public PeerInfo(Inet6Address address, int port) {
 		this.address = address;
 		this.port = port;
 	}
@@ -17,18 +17,18 @@ public final class PeerInfo {
 		return address;
 	}
 
-	public short getPort() {
+	public int getPort() {
 		return port;
 	}
 
 	public void write(ByteBuffer data) {
 		IOUtils.putInet6Address(data, address);
-		data.putShort(port);
+		data.putShort((short) port);
 	}
 
 	public static PeerInfo read(ByteBuffer data) {
 		Inet6Address address = IOUtils.getInet6Address(data);
-		short port = data.getShort();
+		int port = data.getShort() & 0xFFFF;
 		return new PeerInfo(address, port);
 	}
 

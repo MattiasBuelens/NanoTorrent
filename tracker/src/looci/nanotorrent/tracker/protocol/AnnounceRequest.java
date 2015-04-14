@@ -36,8 +36,8 @@ public class AnnounceRequest {
 		Builder builder = new Builder();
 		builder.infoHash(InfoHash.read(data));
 		builder.peerInfo(PeerInfo.read(data));
-		builder.numWant(data.getInt());
-		builder.event(AnnounceEvent.byValue(data.get()));
+		builder.numWant(data.get() & 0xFF);
+		builder.event(AnnounceEvent.byValue(data.get() & 0xFF));
 		return builder.build();
 	}
 

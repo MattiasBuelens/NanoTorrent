@@ -5,34 +5,34 @@ public enum AnnounceEvent {
 	/**
 	 * Peer refreshes its swarm membership.
 	 */
-	REFRESH((byte) 0),
+	REFRESH(0),
 
 	/**
 	 * Peer starting.
 	 */
-	STARTED((byte) 1),
+	STARTED(1),
 
 	/**
 	 * Peer shutting down gracefully.
 	 */
-	STOPPED((byte) 2),
+	STOPPED(2),
 
 	/**
 	 * Peer completed download.
 	 */
-	COMPLETED((byte) 3);
+	COMPLETED(3);
 
-	private final byte value;
+	private final int value;
 
-	private AnnounceEvent(byte value) {
+	private AnnounceEvent(int value) {
 		this.value = value;
 	}
 
-	public byte getValue() {
+	public int getValue() {
 		return value;
 	}
 
-	public static AnnounceEvent byValue(byte value) {
+	public static AnnounceEvent byValue(int value) {
 		for (AnnounceEvent event : AnnounceEvent.values()) {
 			if (event.getValue() == value) {
 				return event;
