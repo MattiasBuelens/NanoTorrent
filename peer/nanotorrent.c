@@ -12,6 +12,11 @@
 #include "peer.h"
 #include "piece.h"
 
+#include "uip-ds6.h"
+
+#define NANOTORRENT_ADDR_POLL_PERIOD (1 * CLOCK_SECOND)
+struct etimer addr_poll;
+
 nanotorrent_torrent_state_t nanotorrent_state;
 
 #define state (nanotorrent_state)
@@ -38,6 +43,13 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		nanotorrent_piece_init();
 		nanotorrent_peer_init();
 		nanotorrent_swarm_init();
+
+		// Wait until we have a global IPv6 address
+		etimer_set(&addr_poll, NANOTORRENT_ADDR_POLL_PERIOD);
+		while (uip_ds6_get_global(-1) == NULL) {
+			etimer_reset(&addr_poll);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&addr_poll));
+		}
 
 		// Join the swarm
 		nanotorrent_swarm_join();
