@@ -35,6 +35,13 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		// Initialize descriptor
 		uiplib_ip6addrconv("aaaa::1", &state.desc.tracker_ip);
 		state.desc.tracker_port = 33333;
+
+		const char contents[] = "Hello, world!";
+		sha1_compute(contents, sizeof(contents), &state.info_hash);
+		printf("Info hash: ");
+		sha1_print(&state.info_hash);
+		printf("\n");
+
 		state.desc.info.file_size = (1 << 12);
 		state.desc.info.piece_size = (1 << 8);
 		state.desc.info.num_pieces = (1 << 4);
@@ -55,6 +62,12 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 
 		// Join the swarm
 		nanotorrent_swarm_join();
+
+		// TODO For debugging
+		while (1) {
+			PROCESS_YIELD()
+			;
+		}
 
 		printf("Shutting down...\n");
 		nanotorrent_swarm_shutdown();

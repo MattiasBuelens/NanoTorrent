@@ -6,18 +6,22 @@ import java.net.InetAddress;
 import java.nio.channels.ClosedChannelException;
 import java.util.Collection;
 import java.util.Scanner;
+import java.util.logging.Level;
 
 public class CommandLine {
 
 	private final Inet6Address address;
 	private final int port;
 
+	private final Tracker tracker;
 	private final TrackerServer server;
 
 	public CommandLine(Inet6Address address, int port) throws IOException {
 		this.address = address;
 		this.port = port;
-		this.server = new TrackerServer();
+		this.tracker = new Tracker();
+		tracker.setLogLevel(Level.FINEST);
+		this.server = new TrackerServer(tracker);
 	}
 
 	public void run() throws Exception {

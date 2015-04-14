@@ -181,4 +181,8 @@ public class Tracker {
 		log.log(level, String.format(format, args));
 	}
 
+	public void setLogLevel(Level level) {
+		log.setLevel(level);
+	}
+
 }
