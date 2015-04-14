@@ -46,10 +46,9 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		nanotorrent_peer_init();
 		nanotorrent_swarm_init();
 
-		// Wait until we have a global IPv6 address
-		printf("Waiting for global address...\n");
+		// Wait until ready
 		etimer_set(&addr_poll, NANOTORRENT_ADDR_POLL_PERIOD);
-		while (uip_ds6_get_global(-1) == NULL) {
+		while (!nanotorrent_swarm_is_ready()) {
 			etimer_reset(&addr_poll);
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&addr_poll));
 		}

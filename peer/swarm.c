@@ -30,22 +30,30 @@ void nanotorrent_swarm_shutdown() {
 	udp_socket_close(&state.swarm.tracker_socket);
 }
 
+bool nanotorrent_swarm_is_ready() {
+	// Need a global IPv6 address before attempting to join
+	if (uip_ds6_get_global(-1) == NULL) {
+		return false;
+	}
+	return true;
+}
+
 void nanotorrent_swarm_join() {
 	nanotorrent_announce_request_t request;
 	PRINTF("Join swarm with tracker [");
 	PRINT6ADDR(&state.desc.tracker_ip);
 	PRINTF("]:%u\n", state.desc.tracker_port);
 
-	// Get own global IP
-	uip_ds6_addr_t *global_address = uip_ds6_get_global(-1);
-	if (global_address == NULL) {
+	// Get own global IPv6 address
+	uip_ds6_addr_t *global_ds6_addr = uip_ds6_get_global(-1);
+	if (global_ds6_addr == NULL) {
 		ERROR("No global address");
 		return;
 	}
 
 	// Create announce request
 	sha1_copy(&request.info_hash, &state.info_hash);
-	uip_ip6addr_copy(&request.peer_info.peer_ip, &global_address->ipaddr);
+	uip_ip6addr_copy(&request.peer_info.peer_ip, &global_ds6_addr->ipaddr);
 	request.peer_info.peer_port = state.listen_port;
 	request.num_want = NANOTORRENT_MAX_PEERS;
 	request.event = NANOTRACKER_ANNOUNCE_STARTED;

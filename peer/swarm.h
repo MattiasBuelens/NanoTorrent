@@ -73,6 +73,7 @@ typedef struct nanotorrent_announce_reply {
 
 void nanotorrent_swarm_init();
 void nanotorrent_swarm_shutdown();
+bool nanotorrent_swarm_is_ready();
 
 void nanotorrent_swarm_join();
 
