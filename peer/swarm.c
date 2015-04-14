@@ -98,8 +98,5 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 		nanotorrent_unpack_peer_info(&cur, &state.swarm.peers[i]);
 	}
 
-	// Close tracker socket
-	udp_socket_close(&state.swarm.tracker_socket);
-
 	// TODO Start connecting with peers
 }
