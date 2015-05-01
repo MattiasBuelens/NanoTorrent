@@ -1,4 +1,4 @@
-CONTIKI_PROJECT = nanotorrent
+CONTIKI_PROJECT = demo
 all: $(CONTIKI_PROJECT)
 
 CONTIKI = ../contiki
