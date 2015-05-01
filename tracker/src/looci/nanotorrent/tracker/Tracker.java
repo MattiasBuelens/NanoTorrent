@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -94,6 +95,35 @@ public class Tracker {
 		log(Level.FINE, "Replied with %d other peers", otherPeers.size());
 
 		return reply.build();
+	}
+
+	public void purgePeers(long maxAge, TimeUnit ageUnit) {
+		purgePeers(ageUnit.toMillis(maxAge));
+	}
+
+	public void purgePeers(long maxAgeInMillis) {
+		Date minTime = new Date(System.currentTimeMillis() - maxAgeInMillis);
+		purgePeers(minTime);
+	}
+
+	public void purgePeers(Date minAnnounceTime) {
+		for (TrackedTorrent torrent : getTorrents()) {
+			purgePeers(torrent, minAnnounceTime);
+		}
+	}
+
+	private void purgePeers(TrackedTorrent torrent, Date minAnnounceTime) {
+		List<TrackedPeer> peers = new ArrayList<>(torrent.getPeers());
+		for (TrackedPeer peer : peers) {
+			Date lastAnnounce = peer.getLastAnnounceTime();
+			if (lastAnnounce.before(minAnnounceTime)) {
+				// Purge peer
+				log(Level.INFO, "Purging peer %s in %s (last announce: %s)",
+						peer.getPeerInfo(), torrent.getInfoHash(),
+						lastAnnounce.toString());
+				torrent.removePeer(peer.getPeerInfo());
+			}
+		}
 	}
 
 	private List<PeerInfo> getOtherPeers(TrackedPeer peer, int maxPeers) {

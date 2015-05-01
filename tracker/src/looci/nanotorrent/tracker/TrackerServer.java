@@ -1,5 +1,6 @@
 package looci.nanotorrent.tracker;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.Inet6Address;
 import java.net.InetSocketAddress;
@@ -7,11 +8,12 @@ import java.net.StandardProtocolFamily;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.DatagramChannel;
+import java.util.concurrent.TimeUnit;
 
 import looci.nanotorrent.tracker.protocol.AnnounceReply;
 import looci.nanotorrent.tracker.protocol.AnnounceRequest;
 
-public class TrackerServer {
+public class TrackerServer implements Closeable {
 
 	private static final int BUFFER_SIZE = 1024;
 
@@ -72,6 +74,7 @@ public class TrackerServer {
 		bind(null, port);
 	}
 
+	@Override
 	public void close() throws IOException {
 		channel.close();
 	}
@@ -94,6 +97,10 @@ public class TrackerServer {
 		// Send reply
 		buffer.flip();
 		channel.send(buffer, remote);
+	}
+
+	public void purgePeers(long maxPeerAge, TimeUnit ageUnit) {
+		getTracker().purgePeers(maxPeerAge, ageUnit);
 	}
 
 }

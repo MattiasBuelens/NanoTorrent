@@ -6,9 +6,24 @@ import java.net.InetAddress;
 import java.nio.channels.ClosedChannelException;
 import java.util.Collection;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class CommandLine {
+
+	/**
+	 * Maximum age of a peer's last received announce.
+	 */
+	public static final long MAX_PEER_AGE = 5;
+	public static final TimeUnit MAX_PEER_AGE_UNIT = TimeUnit.MINUTES;
+
+	/**
+	 * Time between two peer purges.
+	 */
+	public static final long PURGE_PERIOD = 2;
+	public static final TimeUnit PURGE_PERIOD_UNIT = TimeUnit.MINUTES;
 
 	private final Inet6Address address;
 	private final int port;
@@ -16,12 +31,15 @@ public class CommandLine {
 	private final Tracker tracker;
 	private final TrackerServer server;
 
+	private final ScheduledExecutorService executor;
+
 	public CommandLine(Inet6Address address, int port) throws IOException {
 		this.address = address;
 		this.port = port;
 		this.tracker = new Tracker();
 		tracker.setLogLevel(Level.FINEST);
 		this.server = new TrackerServer(tracker);
+		this.executor = Executors.newScheduledThreadPool(4);
 	}
 
 	public void run() throws Exception {
@@ -29,21 +47,24 @@ public class CommandLine {
 		System.out.format("Tracker started on port %d of %s\n",
 				server.getPort(), server.getAddress().toString());
 
-		Thread runner = new Thread(new ReceiveRunner());
-		runner.start();
+		executor.execute(new ReceiveRunner());
+		executor.scheduleWithFixedDelay(new PurgeRunner(), PURGE_PERIOD,
+				PURGE_PERIOD, PURGE_PERIOD_UNIT);
 
 		@SuppressWarnings("resource")
 		Scanner scanner = new Scanner(System.in);
 		boolean isRunning = true;
 
-		while (isRunning) {
+		while (isRunning && server.isConnected()) {
 			System.out.print("> ");
 			String command = scanner.nextLine();
 			isRunning = parseCommand(command);
 		}
+	}
 
+	public void shutdown() throws IOException {
 		server.close();
-		runner.join();
+		executor.shutdown();
 	}
 
 	private boolean parseCommand(String command) {
@@ -88,7 +109,22 @@ public class CommandLine {
 				System.out.println("Tracker stopped");
 			} catch (IOException e) {
 				e.printStackTrace();
+			} finally {
+				try {
+					server.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
+		}
+
+	}
+
+	private class PurgeRunner implements Runnable {
+
+		@Override
+		public void run() {
+			server.purgePeers(MAX_PEER_AGE, MAX_PEER_AGE_UNIT);
 		}
 
 	}
@@ -110,7 +146,11 @@ public class CommandLine {
 		}
 
 		CommandLine cmd = new CommandLine(address, port);
-		cmd.run();
+		try {
+			cmd.run();
+		} finally {
+			cmd.shutdown();
+		}
 	}
 
 }
