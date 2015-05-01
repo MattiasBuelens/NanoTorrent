@@ -76,5 +76,12 @@ void nanotorrent_swarm_shutdown();
 bool nanotorrent_swarm_is_ready();
 
 void nanotorrent_swarm_join();
+void nanotorrent_swarm_leave();
+void nanotorrent_swarm_refresh();
+void nanotorrent_swarm_complete();
+bool nanotorrent_swarm_is_joined();
+
+bool nanotorrent_swarm_check();
+void nanotorrent_swarm_process(process_event_t ev);
 
 #endif /* NANOTORRENT_SWARM_H_ */

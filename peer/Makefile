@@ -4,7 +4,7 @@ all: $(CONTIKI_PROJECT)
 CONTIKI = ../contiki
 TARGET = avr-zigduino
 
-PROJECT_SOURCEFILES += swarm.c peer.c piece.c torrent.c
+PROJECT_SOURCEFILES += nanotorrent.c retry.c swarm.c peer.c piece.c torrent.c
 
 PROJECTDIRS += crypto
 PROJECT_SOURCEFILES += crypto.c sha1.c

@@ -1,31 +1,20 @@
 /**
  * \file
- *         NanoTorrent process.
+ *         NanoTorrent demonstration.
  * \author
  *         Mattias Buelens <mattias.buelens@student.kuleuven.be>
  */
 
 #include "contiki.h"
 
-#include "state.h"
-#include "swarm.h"
-#include "peer.h"
-#include "piece.h"
-
-#include "uip-ds6.h"
-
-#define NANOTORRENT_ADDR_POLL_PERIOD (1 * CLOCK_SECOND)
-struct etimer addr_poll;
-
-nanotorrent_torrent_state_t nanotorrent_state;
-
-#define state (nanotorrent_state)
+#include "nanotorrent.h"
 
 /*---------------------------------------------------------------------------*/
-PROCESS(nanotorrent_process, "NanoTorrent process");
-AUTOSTART_PROCESSES(&nanotorrent_process);
+PROCESS(nanotorrent_demo_process, "NanoTorrent demonstration");
+AUTOSTART_PROCESSES(&nanotorrent_demo_process);
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(nanotorrent_process, ev, data) {
+PROCESS_THREAD(nanotorrent_demo_process, ev, data) {
+	PROCESS_EXITHANDLER(nanotorrent_stop())
 	PROCESS_BEGIN()
 
 		printf("NanoTorrent\n");
@@ -33,46 +22,26 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		printf("\n");
 
 		// Initialize descriptor
-		uiplib_ip6addrconv("aaaa::1", &state.desc.tracker_ip);
-		state.desc.tracker_port = 33333;
+		nanotorrent_torrent_desc_t desc;
+		uip_ip6addr(&desc.tracker_ip, 0xaaaa, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+				0x1);
+		desc.tracker_port = 33333;
+		desc.info.file_size = (1 << 12);
+		desc.info.piece_size = (1 << 8);
+		desc.info.num_pieces = (1 << 4);
+		// TODO Initialize piece hashes
 
-		const char contents[] = "Hello, world!";
-		sha1_compute(contents, sizeof(contents), &state.info_hash);
-		printf("Info hash: ");
-		sha1_print(&state.info_hash);
-		printf("\n");
+		const char *file_name = "myprogram";
 
-		state.desc.info.file_size = (1 << 12);
-		state.desc.info.piece_size = (1 << 8);
-		state.desc.info.num_pieces = (1 << 4);
-		strncpy(state.file_name, "myprogram",
-				NANOTORRENT_FILE_NAME_LENGTH - 1);
-
-		printf("Initializing...\n");
-		nanotorrent_piece_init();
-		nanotorrent_peer_init();
-		nanotorrent_swarm_init();
-
-		// Wait until ready
-		etimer_set(&addr_poll, NANOTORRENT_ADDR_POLL_PERIOD);
-		while (!nanotorrent_swarm_is_ready()) {
-			etimer_reset(&addr_poll);
-			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&addr_poll));
-		}
-
-		// Join the swarm
-		nanotorrent_swarm_join();
+		nanotorrent_start(desc, file_name);
 
 		// TODO For debugging
 		while (1) {
-			PROCESS_YIELD()
+			PROCESS_WAIT_EVENT()
 			;
 		}
 
-		printf("Shutting down...\n");
-		nanotorrent_swarm_shutdown();
-		nanotorrent_peer_shutdown();
-		nanotorrent_piece_shutdown();
+		nanotorrent_stop();
 
 	PROCESS_END()
 }

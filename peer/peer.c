@@ -11,6 +11,11 @@
 
 #define state (nanotorrent_state)
 
+/**
+ * UDP socket with peers
+ */
+static struct udp_socket peer_socket;
+
 void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 		const uip_ipaddr_t *src_addr, uint16_t src_port,
 		const uip_ipaddr_t *dest_addr, uint16_t dest_port, const uint8_t *data,
@@ -18,22 +23,21 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 
 void nanotorrent_peer_init() {
 	// Register peer socket
-	struct udp_socket *socket = &state.peer.peer_socket;
-	udp_socket_close(socket);
-	udp_socket_register(socket, NULL, nanotorrent_peer_handle_message);
+	udp_socket_close(&peer_socket);
+	udp_socket_register(&peer_socket, NULL, nanotorrent_peer_handle_message);
 	// Store listen port
-	state.listen_port = uip_ntohs(socket->udp_conn->lport);
+	state.listen_port = uip_ntohs(peer_socket.udp_conn->lport);
 	PRINTF("Listening for peers on port %u\n", state.listen_port);
 }
 
 void nanotorrent_peer_shutdown() {
 	// Close peer socket
-	udp_socket_close(&state.peer.peer_socket);
+	udp_socket_close(&peer_socket);
 }
 
 void nanotorrent_peer_send_message(const uint8_t *buffer,
 		uint16_t buffer_length, const nanotorrent_peer_info_t *remote_peer) {
-	udp_socket_sendto(&state.peer.peer_socket, buffer, buffer_length,
+	udp_socket_sendto(&peer_socket, buffer, buffer_length,
 			&remote_peer->peer_ip, remote_peer->peer_port);
 }
 

@@ -38,19 +38,15 @@ typedef struct nanotorrent_swarm_state {
 	 */
 	nanotorrent_peer_info_t peers[NANOTORRENT_MAX_PEERS];
 	/**
-	 * UDP socket with tracker
+	 * Whether this peer has joined the swarm
 	 */
-	struct udp_socket tracker_socket;
+	bool is_joined;
 } nanotorrent_swarm_state_t;
 
 /**
  * Peer state
  */
 typedef struct nanotorrent_peer_state {
-	/**
-	 * UDP socket with peers
-	 */
-	struct udp_socket peer_socket;
 } nanotorrent_peer_state_t;
 
 /**
