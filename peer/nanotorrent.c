@@ -15,12 +15,6 @@
 nanotorrent_torrent_state_t nanotorrent_state;
 #define state (nanotorrent_state)
 
-/**
- * Timer for checking whether NanoTorrent is ready
- */
-#define NANOTORRENT_READY_POLL_PERIOD (1 * CLOCK_SECOND)
-static struct etimer ready_poll;
-
 void nanotorrent_start(nanotorrent_torrent_desc_t desc, const char *file_name) {
 	// Initialize state
 	memset(&state, 0, sizeof(state));
@@ -41,11 +35,11 @@ void nanotorrent_stop() {
 void nanotorrent_init() {
 	nanotorrent_piece_init();
 	nanotorrent_peer_init();
-	nanotorrent_swarm_init();
+	nanotorrent_swarm_start();
 }
 
 void nanotorrent_shutdown() {
-	nanotorrent_swarm_shutdown();
+	nanotorrent_swarm_stop();
 	nanotorrent_peer_shutdown();
 	nanotorrent_piece_shutdown();
 }
@@ -62,36 +56,23 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		// Initialize
 		nanotorrent_init();
 
-		// Wait until ready
-		etimer_set(&ready_poll, NANOTORRENT_READY_POLL_PERIOD);
-		while (!nanotorrent_is_ready()) {
-			etimer_reset(&ready_poll);
-			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ready_poll));
-		}
-
-		// Join the swarm
+		// Wait until joining
+		NANOTORRENT_SWARM_WAIT_EVENT(ev, data, NANOTORRENT_SWARM_JOINING);
 		PRINTF("Joining swarm with tracker [");
 		PRINT6ADDR(&state.desc.tracker_ip);
 		PRINTF("]:%u\n", state.desc.tracker_port);
 
-		nanotorrent_swarm_join();
-		while (!nanotorrent_swarm_is_joined()) {
-			nanotorrent_swarm_process(ev);
-			PROCESS_WAIT_EVENT_UNTIL(nanotorrent_swarm_check());
-		}
-		PRINTF("Joined the swarm");
+		// Wait until joined
+		NANOTORRENT_SWARM_WAIT_EVENT(ev, data, NANOTORRENT_SWARM_JOINED);
+		PRINTF("Joined the swarm\n");
 
 		while (nanotorrent_swarm_is_joined()) {
-			nanotorrent_swarm_process(ev);
 
 			// TODO Connect with peers
 			// TODO Piece selection and peer data requests
 
-			PROCESS_WAIT_EVENT_UNTIL(nanotorrent_swarm_check());
+			PROCESS_YIELD();
 		}
-
-		// Shutdown
-		nanotorrent_shutdown();
 
 	PROCESS_END()
 }

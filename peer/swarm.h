@@ -71,17 +71,37 @@ typedef struct nanotorrent_announce_reply {
 	uint8_t num_peers;
 } nanotorrent_announce_reply_t;
 
-void nanotorrent_swarm_init();
-void nanotorrent_swarm_shutdown();
+PROCESS_NAME(nanotorrent_swarm_process);
+
+typedef enum nanotorrent_swarm_event_type {
+	/**
+	 * Joining swarm
+	 */
+	NANOTORRENT_SWARM_JOINING,
+	/**
+	 * Joined swarm
+	 */
+	NANOTORRENT_SWARM_JOINED,
+	/**
+	 * Left swarm
+	 */
+	NANOTORRENT_SWARM_LEFT
+} nanotorrent_swarm_event_type_t;
+process_event_t nanotorrent_swarm_event;
+
+#define NANOTORRENT_SWARM_WAIT_EVENT(ev, data, type) \
+	PROCESS_WAIT_EVENT_UNTIL((ev) == nanotorrent_swarm_event \
+			&& *((nanotorrent_swarm_event_type_t *) (data)) == (type))
+
+void nanotorrent_swarm_start();
+void nanotorrent_swarm_stop();
 bool nanotorrent_swarm_is_ready();
 
 void nanotorrent_swarm_join();
 void nanotorrent_swarm_leave();
+void nanotorrent_swarm_force_leave();
 void nanotorrent_swarm_refresh();
 void nanotorrent_swarm_complete();
 bool nanotorrent_swarm_is_joined();
-
-bool nanotorrent_swarm_check();
-void nanotorrent_swarm_process(process_event_t ev);
 
 #endif /* NANOTORRENT_SWARM_H_ */

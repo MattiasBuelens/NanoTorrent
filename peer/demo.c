@@ -41,8 +41,6 @@ PROCESS_THREAD(nanotorrent_demo_process, ev, data) {
 			;
 		}
 
-		nanotorrent_stop();
-
 	PROCESS_END()
 }
 /*---------------------------------------------------------------------------*/
