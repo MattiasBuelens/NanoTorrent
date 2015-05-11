@@ -100,6 +100,64 @@ void nanotorrent_peer_send_message(const uint8_t *buffer,
 			&remote_peer->peer_ip, NANOTORRENT_PEER_PORT);
 }
 
+CC_INLINE void nanotorrent_peer_make_header(
+		nanotorrent_peer_message_header_t *header, uint8_t type) {
+	sha1_copy(&header->info_hash, &state.info_hash);
+	header->type = type;
+}
+
+void nanotorrent_peer_write_close(uint8_t **cur) {
+	nanotorrent_peer_close_t message;
+	nanotorrent_peer_make_header(&message.header, NANOTRACKER_PEER_CLOSE);
+
+	nanotorrent_pack_peer_close(cur, &message);
+}
+
+void nanotorrent_peer_write_have(uint8_t **cur) {
+	nanotorrent_peer_have_t message;
+	nanotorrent_peer_make_header(&message.header, NANOTRACKER_PEER_HAVE);
+	message.have = state.piece.have;
+
+	nanotorrent_pack_peer_have(cur, &message);
+}
+
+void nanotorrent_peer_write_data_request(uint8_t **cur, uint8_t piece_index,
+		uint16_t data_start) {
+	nanotorrent_peer_data_t request;
+	nanotorrent_peer_make_header(&request.header,
+			NANOTRACKER_PEER_DATA_REQUEST);
+	request.piece_index = piece_index;
+	request.data_start = data_start;
+
+	nanotorrent_pack_peer_data(cur, &request);
+}
+
+uint16_t nanotorrent_peer_write_data_reply(uint8_t **cur, uint16_t buffer_size,
+		uint8_t piece_index, uint16_t data_start) {
+	// Write header
+	nanotorrent_peer_data_t reply;
+	nanotorrent_peer_make_header(&reply.header, NANOTRACKER_PEER_DATA_REPLY);
+	reply.piece_index = piece_index;
+	reply.data_start = data_start;
+
+	uint8_t *header_start = *cur;
+	nanotorrent_pack_peer_data(cur, &reply);
+	uint8_t *header_end = *cur;
+	uint16_t header_length = header_end - header_start;
+
+	// Write data
+	uint16_t data_length = nanotorrent_piece_read(piece_index, data_start, *cur,
+			buffer_size - header_length);
+	if (data_length < 0) {
+		// TODO Don't return negative value for unsigned return type
+		return -1;
+	}
+	*cur += data_length;
+
+	// Return number of data bytes in reply
+	return data_length;
+}
+
 void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
 		uint16_t buffer_length, const nanotorrent_peer_info_t *remote_peer) {
 	nanotorrent_peer_data_t request;
@@ -191,62 +249,4 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 		WARN("Ignoring peer message with unknown type %u", header.type);
 	}
 
-}
-
-CC_INLINE void nanotorrent_peer_make_header(
-		nanotorrent_peer_message_header_t *header, uint8_t type) {
-	sha1_copy(&header->info_hash, &state.info_hash);
-	header->type = type;
-}
-
-void nanotorrent_peer_write_close(uint8_t **cur) {
-	nanotorrent_peer_close_t message;
-	nanotorrent_peer_make_header(&message.header, NANOTRACKER_PEER_CLOSE);
-
-	nanotorrent_pack_peer_close(cur, &message);
-}
-
-void nanotorrent_peer_write_have(uint8_t **cur) {
-	nanotorrent_peer_have_t message;
-	nanotorrent_peer_make_header(&message.header, NANOTRACKER_PEER_HAVE);
-	message.have = state.piece.have;
-
-	nanotorrent_pack_peer_have(cur, &message);
-}
-
-void nanotorrent_peer_write_data_request(uint8_t **cur, uint8_t piece_index,
-		uint16_t data_start) {
-	nanotorrent_peer_data_t request;
-	nanotorrent_peer_make_header(&request.header,
-			NANOTRACKER_PEER_DATA_REQUEST);
-	request.piece_index = piece_index;
-	request.data_start = data_start;
-
-	nanotorrent_pack_peer_data(cur, &request);
-}
-
-uint16_t nanotorrent_peer_write_data_reply(uint8_t **cur, uint16_t buffer_size,
-		uint8_t piece_index, uint16_t data_start) {
-	// Write header
-	nanotorrent_peer_data_t reply;
-	nanotorrent_peer_make_header(&reply.header, NANOTRACKER_PEER_DATA_REPLY);
-	reply.piece_index = piece_index;
-	reply.data_start = data_start;
-
-	uint8_t *header_start = *cur;
-	nanotorrent_pack_peer_data(cur, &reply);
-	uint8_t *header_end = *cur;
-	uint16_t header_length = header_end - header_start;
-
-	// Write data
-	uint16_t data_length = nanotorrent_piece_read(piece_index, data_start, *cur,
-			buffer_size - header_length);
-	if (data_length < 0) {
-		// TODO Don't return negative value for unsigned return type
-		return -1;
-	}
-	*cur += data_length;
-
-	// Return number of data bytes in reply
-	return data_length;
 }
