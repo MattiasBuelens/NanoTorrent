@@ -7,24 +7,27 @@
 
 #include "retry.h"
 
-void nanotorrent_retry_init(nanotorrent_retry_t *retry, clock_time_t interval,
+void nanotorrent_retry_init(nanotorrent_retry_t *retry, clock_time_t timeout,
 		nanotorrent_retry_callback_t callback) {
+	retry->timeout = timeout;
 	retry->callback = callback;
-	retry->interval = interval;
+	retry->num_retries = 0;
+	retry->max_retries = 0;
 	nanotorrent_retry_stop(retry);
 }
 
 void nanotorrent_retry_next(nanotorrent_retry_t *retry) {
-	if (retry->remaining > 1) {
-		// Reset for next try
-		etimer_reset(&retry->timer);
+	if (retry->num_retries < retry->max_retries) {
+		// Use exponential back-off for next timeout
+		clock_time_t timeout = retry->timeout * (1 << retry->num_retries);
+		etimer_set(&retry->timer, timeout);
 	} else {
 		// Stop
 		nanotorrent_retry_stop(retry);
 	}
-	if (retry->remaining > 0) {
+	if (retry->num_retries <= retry->max_retries) {
 		// Try again
-		retry->remaining--;
+		retry->num_retries++;
 		retry->callback(RETRY_AGAIN);
 	} else {
 		// Stop retrying
@@ -32,22 +35,22 @@ void nanotorrent_retry_next(nanotorrent_retry_t *retry) {
 	}
 }
 
-void nanotorrent_retry_start(nanotorrent_retry_t *retry, uint8_t retries) {
-	// Start timer and set count
-	etimer_set(&retry->timer, retry->interval);
-	retry->remaining = retries;
+void nanotorrent_retry_start(nanotorrent_retry_t *retry, uint8_t max_retries) {
+	// Set counters
+	retry->num_retries = 0;
+	retry->max_retries = max_retries;
 	// Try immediately
 	nanotorrent_retry_next(retry);
 }
 
 void nanotorrent_retry_stop(nanotorrent_retry_t *retry) {
-	// Stop timer and reset count
+	// Stop timer
 	etimer_stop(&retry->timer);
-	retry->remaining = 0;
 }
 
 bool nanotorrent_retry_check(nanotorrent_retry_t *retry) {
-	return retry->remaining > 0 && etimer_expired(&retry->timer);
+	return retry->num_retries <= retry->max_retries
+			&& etimer_expired(&retry->timer);
 }
 
 void nanotorrent_retry_process(nanotorrent_retry_t *retry) {

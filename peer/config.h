@@ -29,9 +29,9 @@
 #define NANOTORRENT_MAX_ANNOUNCE_RETRIES 5
 
 /**
- * Time to wait before retrying an announce request
+ * Base timeout for retrying an announce request
  */
-#define NANOTORRENT_ANNOUNCE_RETRY_PERIOD (3 * CLOCK_SECOND)
+#define NANOTORRENT_ANNOUNCE_RETRY_TIMEOUT (3 * CLOCK_SECOND)
 
 /**
  * Time between two announce refresh requests
@@ -41,11 +41,11 @@
 /**
  * Maximum number of retries for a peer data request
  */
-#define NANOTORRENT_MAX_PEER_DATA_RETRIES 5
+#define NANOTORRENT_MAX_PEER_DATA_RETRIES 3
 
 /**
- * Time to wait before retrying a peer data request
+ * Base timeout for retrying a peer data request
  */
-#define NANOTORRENT_PEER_DATA_RETRY_PERIOD (3 * CLOCK_SECOND)
+#define NANOTORRENT_PEER_DATA_RETRY_TIMEOUT (5 * CLOCK_SECOND)
 
 #endif /* NANOTORRENT_CONFIG_H_ */

@@ -58,7 +58,7 @@ void nanotorrent_swarm_init() {
 	state.swarm.num_peers = 0;
 	memset(&state.swarm.peers, 0, sizeof(state.swarm.peers));
 	// Initialize announce retrying
-	nanotorrent_retry_init(&announce_retry, NANOTORRENT_ANNOUNCE_RETRY_PERIOD,
+	nanotorrent_retry_init(&announce_retry, NANOTORRENT_ANNOUNCE_RETRY_TIMEOUT,
 			nanotorrent_swarm_announce_retry);
 	// Initialize as having left the swarm
 	nanotorrent_swarm_leave_quiet();
