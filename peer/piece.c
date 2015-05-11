@@ -62,6 +62,11 @@ void nanotorrent_piece_shutdown() {
 	state.piece.file = -1;
 }
 
+bool nanotorrent_piece_is_seed() {
+	uint32_t mask = (1 << state.desc.info.num_pieces) - 1;
+	return state.piece.have & mask == mask;
+}
+
 bool nanotorrent_piece_is_complete(const uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= state.desc.info.num_pieces) {
 		ERROR("Invalid piece index: %u", piece_index);
