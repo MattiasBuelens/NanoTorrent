@@ -25,6 +25,10 @@ typedef struct nanotorrent_peer_info {
 	uint16_t peer_port;
 } nanotorrent_peer_info_t;
 
+#define nanotorrent_peer_info_cmp(a, b) \
+	(uip_ip6addr_cmp(&(a)->peer_ip, &(b)->peer_ip) \
+			&& (a)->peer_port == (b)->peer_port)
+
 /**
  * Swarm state
  */
