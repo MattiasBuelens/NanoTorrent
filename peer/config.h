@@ -9,6 +9,11 @@
 #define NANOTORRENT_CONFIG_H_
 
 /**
+ * UDP port for peer protocol
+ */
+#define NANOTORRENT_PEER_PORT 4242
+
+/**
  * Maximum length of file name
  */
 #define NANOTORRENT_FILE_NAME_LENGTH 16
@@ -21,7 +26,7 @@
 /**
  * Maximum amount of peers to request from tracker
  */
-#define NANOTORRENT_MAX_PEERS 16
+#define NANOTORRENT_MAX_PEERS 5
 
 /**
  * Maximum number of retries for an announce request

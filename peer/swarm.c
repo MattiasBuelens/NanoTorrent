@@ -102,7 +102,6 @@ void nanotorrent_swarm_announce_send(nanotracker_announce_event_t event) {
 	nanotorrent_announce_request_t request;
 	sha1_copy(&request.info_hash, &state.info_hash);
 	uip_ip6addr_copy(&request.peer_info.peer_ip, &global_ds6_addr->ipaddr);
-	request.peer_info.peer_port = state.listen_port;
 	request.num_want = NANOTORRENT_MAX_PEERS;
 	request.event = event;
 

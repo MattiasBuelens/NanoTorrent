@@ -20,15 +20,10 @@ typedef struct nanotorrent_peer_info {
 	 * IPv6 address
 	 */
 	uip_ip6addr_t peer_ip;
-	/**
-	 * Port listening for connections from other peers
-	 */
-	uint16_t peer_port;
 } nanotorrent_peer_info_t;
 
 #define nanotorrent_peer_info_cmp(a, b) \
-	(uip_ip6addr_cmp(&(a)->peer_ip, &(b)->peer_ip) \
-			&& (a)->peer_port == (b)->peer_port)
+	(uip_ip6addr_cmp(&(a)->peer_ip, &(b)->peer_ip))
 
 /**
  * Swarm state
@@ -104,10 +99,6 @@ typedef struct nanotorrent_torrent_state {
 	 * Destination file name
 	 */
 	char file_name[NANOTORRENT_FILE_NAME_LENGTH];
-	/**
-	 * Port listening for connections from other peers
-	 */
-	uint16_t listen_port;
 	/**
 	 * Torrent descriptor
 	 */
