@@ -81,6 +81,10 @@ typedef struct nanotorrent_peer_data {
 void nanotorrent_peer_init();
 void nanotorrent_peer_shutdown();
 
+uint8_t nanotorrent_peer_active_count();
+void nanotorrent_peer_connect(nanotorrent_peer_info_t *peers, uint8_t num_peers);
+void nanotorrent_peer_disconnect(nanotorrent_peer_info_t peer);
+
 void nanotorrent_peer_write_close(uint8_t **cur);
 void nanotorrent_peer_write_have(uint8_t **cur);
 void nanotorrent_peer_write_data_request(uint8_t **cur, uint8_t piece_index,

@@ -10,6 +10,7 @@
 
 #include "common.h"
 #include "torrent.h"
+#include "retry.h"
 
 /**
  * Peer connection info
@@ -51,6 +52,30 @@ typedef struct nanotorrent_swarm_state {
  * Peer state
  */
 typedef struct nanotorrent_peer_state {
+	/**
+	 * Whether this peer connection is active
+	 */
+	bool is_active;
+	/**
+	 * Peer info
+	 */
+	nanotorrent_peer_info_t peer_info;
+	/**
+	 * Bit vector of completed pieces in peer's file
+	 */
+	uint32_t have;
+	/**
+	 * Piece index of currently requested piece
+	 */
+	uint8_t piece_index;
+	/**
+	 * Offset in currently requested piece
+	 */
+	uint16_t piece_offset;
+	/**
+	 * Piece request retry
+	 */
+	nanotorrent_retry_t piece_retry;
 } nanotorrent_peer_state_t;
 
 /**
@@ -92,9 +117,9 @@ typedef struct nanotorrent_torrent_state {
 	 */
 	nanotorrent_swarm_state_t swarm;
 	/**
-	 * Peer state
+	 * Peer states
 	 */
-	nanotorrent_peer_state_t peer;
+	nanotorrent_peer_state_t peers[NANOTORRENT_MAX_PEERS];
 	/**
 	 * Piece state
 	 */

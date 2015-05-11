@@ -35,6 +35,66 @@ void nanotorrent_peer_shutdown() {
 	udp_socket_close(&peer_socket);
 }
 
+uint8_t nanotorrent_peer_active_count() {
+	uint8_t count = 0;
+	int i;
+	for (i = 0; i < NANOTORRENT_MAX_PEERS; i++) {
+		if (state.peers[i].is_active) {
+			count++;
+		}
+	}
+	return count;
+}
+
+nanotorrent_peer_state_t *nanotorrent_peer_find(
+		nanotorrent_peer_info_t peer_info) {
+	int i;
+	for (i = 0; i < NANOTORRENT_MAX_PEERS; i++) {
+		if (state.peers[i].is_active
+				&& nanotorrent_peer_info_cmp(&peer_info,
+						&state.peers[i].peer_info)) {
+			return &state.peers[i];
+		}
+	}
+	return NULL;
+}
+
+void nanotorrent_peer_connect(nanotorrent_peer_info_t *peers, uint8_t num_peers) {
+	nanotorrent_peer_state_t *slot;
+	uint8_t slot_index = 0;
+	int i;
+	for (i = 0; i < num_peers; i++) {
+		// Find next available slot
+		while (slot_index < NANOTORRENT_MAX_PEERS
+				&& state.peers[slot_index].is_active) {
+			slot_index++;
+		}
+		if (slot_index >= NANOTORRENT_MAX_PEERS) {
+			// No more slots available
+			break;
+		}
+		if (nanotorrent_peer_find(peers[i]) != NULL) {
+			// Already connected with this peer
+			continue;
+		}
+		slot = &state.peers[slot_index];
+		// TODO Move to peer init?
+		memset(slot, 0, sizeof(*slot));
+		slot->peer_info = peers[i];
+		slot->is_active = true;
+		// TODO Send initial HAVE
+		slot_index++;
+	}
+}
+
+void nanotorrent_peer_disconnect(nanotorrent_peer_info_t peer) {
+	nanotorrent_peer_state_t *slot = nanotorrent_peer_find(peer);
+	if (slot == NULL) {
+		return;
+	}
+	// TODO Close peer connection
+}
+
 void nanotorrent_peer_send_message(const uint8_t *buffer,
 		uint16_t buffer_length, const nanotorrent_peer_info_t *remote_peer) {
 	udp_socket_sendto(&peer_socket, buffer, buffer_length,
@@ -184,6 +244,7 @@ uint16_t nanotorrent_peer_write_data_reply(uint8_t **cur, uint16_t buffer_size,
 	uint16_t data_length = nanotorrent_piece_read(piece_index, data_start, *cur,
 			buffer_size - header_length);
 	if (data_length < 0) {
+		// TODO Don't return negative value for unsigned return type
 		return -1;
 	}
 	*cur += data_length;
