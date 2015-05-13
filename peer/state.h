@@ -36,7 +36,7 @@ typedef struct nanotorrent_swarm_state {
 	/**
 	 * Known peers
 	 */
-	nanotorrent_peer_info_t peers[NANOTORRENT_MAX_PEERS];
+	nanotorrent_peer_info_t peers[NANOTORRENT_MAX_SWARM_PEERS];
 	/**
 	 * Whether this peer has joined the swarm
 	 */

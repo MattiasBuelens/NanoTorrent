@@ -26,12 +26,12 @@
 /**
  * Maximum amount of peers to request from tracker
  */
-#define NANOTORRENT_MAX_PEERS 5
+#define NANOTORRENT_MAX_SWARM_PEERS 5
 
 /**
  * Maximum amount of outgoing peer connections to establish
  */
-#define NANOTORRENT_MAX_OUT_PEERS NANOTORRENT_MAX_PEERS
+#define NANOTORRENT_MAX_OUT_PEERS NANOTORRENT_MAX_SWARM_PEERS
 
 /**
  * Maximum amount of incoming peer connections to accept

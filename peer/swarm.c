@@ -102,7 +102,7 @@ void nanotorrent_swarm_announce_send(nanotracker_announce_event_t event) {
 	nanotorrent_announce_request_t request;
 	sha1_copy(&request.info_hash, &state.info_hash);
 	uip_ip6addr_copy(&request.peer_info.peer_ip, &global_ds6_addr->ipaddr);
-	request.num_want = NANOTORRENT_MAX_PEERS;
+	request.num_want = NANOTORRENT_MAX_SWARM_PEERS;
 	request.event = event;
 
 	// Connect to tracker
@@ -245,7 +245,7 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 	}
 
 	// Update number of peers
-	state.swarm.num_peers = MIN(reply.num_peers, NANOTORRENT_MAX_PEERS);
+	state.swarm.num_peers = MIN(reply.num_peers, NANOTORRENT_MAX_SWARM_PEERS);
 	// Read peers into state
 	for (i = 0; i < state.swarm.num_peers; i++) {
 		nanotorrent_unpack_peer_info(&cur, &state.swarm.peers[i]);
