@@ -29,6 +29,16 @@
 #define NANOTORRENT_MAX_PEERS 5
 
 /**
+ * Maximum amount of outgoing peer connections to establish
+ */
+#define NANOTORRENT_MAX_OUT_PEERS NANOTORRENT_MAX_PEERS
+
+/**
+ * Maximum amount of incoming peer connections to accept
+ */
+#define NANOTORRENT_MAX_IN_PEERS NANOTORRENT_MAX_OUT_PEERS
+
+/**
  * Maximum number of retries for an announce request
  */
 #define NANOTORRENT_MAX_ANNOUNCE_RETRIES 5

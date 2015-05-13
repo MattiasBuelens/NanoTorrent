@@ -23,6 +23,9 @@ typedef enum {
 	false, true
 } bool;
 
+#define ARRAY_FOR(elem, array, size) \
+	for (elem = (array); elem < (array) + (size); ++elem)
+
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"

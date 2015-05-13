@@ -30,11 +30,11 @@ typedef struct nanotorrent_peer_info {
  */
 typedef struct nanotorrent_swarm_state {
 	/**
-	 * Number of connected peers
+	 * Number of known peers
 	 */
 	uint8_t num_peers;
 	/**
-	 * Connected peers
+	 * Known peers
 	 */
 	nanotorrent_peer_info_t peers[NANOTORRENT_MAX_PEERS];
 	/**
@@ -73,6 +73,30 @@ typedef struct nanotorrent_peer_state {
 	nanotorrent_retry_t piece_retry;
 } nanotorrent_peer_state_t;
 
+#define NANOTORRENT_MAX_EXCHANGE_PEERS (NANOTORRENT_MAX_OUT_PEERS + NANOTORRENT_MAX_IN_PEERS)
+
+/**
+ * Peer exchange state
+ */
+typedef struct nanotorrent_exchange_state {
+	union {
+		/**
+		 * All peers
+		 */
+		nanotorrent_peer_state_t all[NANOTORRENT_MAX_EXCHANGE_PEERS];
+		struct {
+			/**
+			 * Outgoing peers
+			 */
+			nanotorrent_peer_state_t out[NANOTORRENT_MAX_OUT_PEERS];
+			/**
+			 * Incoming peers
+			 */
+			nanotorrent_peer_state_t in[NANOTORRENT_MAX_IN_PEERS];
+		};
+	} peers;
+} nanotorrent_exchange_state_t;
+
 /**
  * Piece state
  */
@@ -108,9 +132,9 @@ typedef struct nanotorrent_torrent_state {
 	 */
 	nanotorrent_swarm_state_t swarm;
 	/**
-	 * Peer states
+	 * Exchange state
 	 */
-	nanotorrent_peer_state_t peers[NANOTORRENT_MAX_PEERS];
+	nanotorrent_exchange_state_t exchange;
 	/**
 	 * Piece state
 	 */

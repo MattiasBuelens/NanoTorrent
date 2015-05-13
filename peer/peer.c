@@ -36,9 +36,10 @@ void nanotorrent_peer_shutdown() {
 
 uint8_t nanotorrent_peer_active_count() {
 	uint8_t count = 0;
-	int i;
-	for (i = 0; i < NANOTORRENT_MAX_PEERS; i++) {
-		if (state.peers[i].is_active) {
+	nanotorrent_peer_state_t *peer;
+	ARRAY_FOR(peer, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
+	{
+		if (peer->is_active) {
 			count++;
 		}
 	}
@@ -47,12 +48,12 @@ uint8_t nanotorrent_peer_active_count() {
 
 nanotorrent_peer_state_t *nanotorrent_peer_find(
 		nanotorrent_peer_info_t peer_info) {
-	int i;
-	for (i = 0; i < NANOTORRENT_MAX_PEERS; i++) {
-		if (state.peers[i].is_active
-				&& nanotorrent_peer_info_cmp(&peer_info,
-						&state.peers[i].peer_info)) {
-			return &state.peers[i];
+	nanotorrent_peer_state_t *peer;
+	ARRAY_FOR(peer, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
+	{
+		if (peer->is_active
+				&& nanotorrent_peer_info_cmp(&peer_info, &peer->peer_info)) {
+			return peer;
 		}
 	}
 	return NULL;
@@ -64,11 +65,11 @@ void nanotorrent_peer_connect(nanotorrent_peer_info_t *peers, uint8_t num_peers)
 	int i;
 	for (i = 0; i < num_peers; i++) {
 		// Find next available slot
-		while (slot_index < NANOTORRENT_MAX_PEERS
-				&& state.peers[slot_index].is_active) {
+		while (slot_index < NANOTORRENT_MAX_OUT_PEERS
+				&& state.exchange.peers.out[slot_index].is_active) {
 			slot_index++;
 		}
-		if (slot_index >= NANOTORRENT_MAX_PEERS) {
+		if (slot_index >= NANOTORRENT_MAX_OUT_PEERS) {
 			// No more slots available
 			break;
 		}
@@ -76,7 +77,7 @@ void nanotorrent_peer_connect(nanotorrent_peer_info_t *peers, uint8_t num_peers)
 			// Already connected with this peer
 			continue;
 		}
-		slot = &state.peers[slot_index];
+		slot = &state.exchange.peers.out[slot_index];
 		// TODO Move to peer init?
 		memset(slot, 0, sizeof(*slot));
 		slot->peer_info = peers[i];
