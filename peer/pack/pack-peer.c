@@ -12,12 +12,14 @@ void nanotorrent_pack_peer_message_header(uint8_t **cur,
 		const nanotorrent_peer_message_header_t *header) {
 	nanotorrent_pack_uint8(cur, &header->type);
 	nanotorrent_pack_sha1_digest(cur, &header->info_hash);
+	nanotorrent_pack_uint32(cur, &header->have);
 }
 
 void nanotorrent_unpack_peer_message_header(const uint8_t **cur,
 		nanotorrent_peer_message_header_t *header) {
 	nanotorrent_unpack_uint8(cur, &header->type);
 	nanotorrent_unpack_sha1_digest(cur, &header->info_hash);
+	nanotorrent_unpack_uint32(cur, &header->have);
 }
 
 void nanotorrent_pack_peer_close(uint8_t **cur,
@@ -33,13 +35,11 @@ void nanotorrent_unpack_peer_close(const uint8_t **cur,
 void nanotorrent_pack_peer_have(uint8_t **cur,
 		const nanotorrent_peer_have_t *message) {
 	nanotorrent_pack_peer_message_header(cur, &message->header);
-	nanotorrent_pack_uint32(cur, &message->have);
 }
 
 void nanotorrent_unpack_peer_have(const uint8_t **cur,
 		nanotorrent_peer_have_t *message) {
 	nanotorrent_unpack_peer_message_header(cur, &message->header);
-	nanotorrent_unpack_uint32(cur, &message->have);
 }
 
 void nanotorrent_pack_peer_data(uint8_t **cur,

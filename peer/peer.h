@@ -43,6 +43,10 @@ typedef struct nanotorrent_peer_message_header {
 	 * SHA1 hash of torrent info
 	 */
 	sha1_digest_t info_hash;
+	/**
+	 * Bit vector of completed pieces in own file
+	 */
+	uint32_t have;
 } nanotorrent_peer_message_header_t;
 
 typedef struct nanotorrent_peer_close {
@@ -57,10 +61,6 @@ typedef struct nanotorrent_peer_have {
 	 * Message header
 	 */
 	nanotorrent_peer_message_header_t header;
-	/**
-	 * Bit vector of completed pieces in own file
-	 */
-	uint32_t have;
 } nanotorrent_peer_have_t;
 
 typedef struct nanotorrent_peer_data {

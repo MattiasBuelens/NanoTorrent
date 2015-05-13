@@ -104,6 +104,7 @@ CC_INLINE void nanotorrent_peer_make_header(
 		nanotorrent_peer_message_header_t *header, uint8_t type) {
 	sha1_copy(&header->info_hash, &state.info_hash);
 	header->type = type;
+	header->have = state.piece.have;
 }
 
 void nanotorrent_peer_write_close(uint8_t **cur) {
@@ -116,7 +117,6 @@ void nanotorrent_peer_write_close(uint8_t **cur) {
 void nanotorrent_peer_write_have(uint8_t **cur) {
 	nanotorrent_peer_have_t message;
 	nanotorrent_peer_make_header(&message.header, NANOTRACKER_PEER_HAVE);
-	message.have = state.piece.have;
 
 	nanotorrent_pack_peer_have(cur, &message);
 }
