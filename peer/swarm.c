@@ -43,7 +43,8 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 		uint16_t datalen);
 
 void nanotorrent_swarm_leave_quiet();
-void nanotorrent_swarm_announce_retry(nanotorrent_retry_event_t event);
+void nanotorrent_swarm_announce_retry(nanotorrent_retry_event_t event,
+		void *data);
 
 void nanotorrent_swarm_start() {
 	process_start(&nanotorrent_swarm_process, NULL);
@@ -121,7 +122,8 @@ void nanotorrent_swarm_announce_send(nanotracker_announce_event_t event) {
 
 void nanotorrent_swarm_announce_start(nanotracker_announce_event_t event) {
 	announce_retry_event = event;
-	nanotorrent_retry_start(&announce_retry, NANOTORRENT_MAX_ANNOUNCE_RETRIES);
+	nanotorrent_retry_start(&announce_retry, NANOTORRENT_MAX_ANNOUNCE_RETRIES,
+			NULL);
 }
 
 void nanotorrent_swarm_announce_stop() {
@@ -129,7 +131,8 @@ void nanotorrent_swarm_announce_stop() {
 	nanotorrent_retry_stop(&announce_retry);
 }
 
-void nanotorrent_swarm_announce_retry(nanotorrent_retry_event_t event) {
+void nanotorrent_swarm_announce_retry(nanotorrent_retry_event_t event,
+		void *data) {
 	switch (event) {
 	case RETRY_AGAIN:
 		// Try again

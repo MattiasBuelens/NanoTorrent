@@ -28,14 +28,17 @@ void nanotorrent_retry_next(nanotorrent_retry_t *retry) {
 	if (retry->num_retries <= retry->max_retries) {
 		// Try again
 		retry->num_retries++;
-		retry->callback(RETRY_AGAIN);
+		retry->callback(RETRY_AGAIN, retry->data);
 	} else {
 		// Stop retrying
-		retry->callback(RETRY_STOP);
+		retry->callback(RETRY_STOP, retry->data);
 	}
 }
 
-void nanotorrent_retry_start(nanotorrent_retry_t *retry, uint8_t max_retries) {
+void nanotorrent_retry_start(nanotorrent_retry_t *retry, uint8_t max_retries,
+		void *data) {
+	// Initialize
+	retry->data = data;
 	// Set counters
 	retry->num_retries = 0;
 	retry->max_retries = max_retries;
@@ -44,6 +47,8 @@ void nanotorrent_retry_start(nanotorrent_retry_t *retry, uint8_t max_retries) {
 }
 
 void nanotorrent_retry_stop(nanotorrent_retry_t *retry) {
+	// Reset
+	retry->data = NULL;
 	// Stop timer
 	etimer_stop(&retry->timer);
 }
