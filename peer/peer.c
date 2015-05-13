@@ -59,40 +59,58 @@ nanotorrent_peer_state_t *nanotorrent_peer_find(
 	return NULL;
 }
 
-void nanotorrent_peer_connect(nanotorrent_peer_info_t *peers, uint8_t num_peers) {
+bool nanotorrent_peer_connect(nanotorrent_peer_info_t peer) {
 	nanotorrent_peer_state_t *slot;
 	uint8_t slot_index = 0;
+	// Find next available slot
+	while (slot_index < NANOTORRENT_MAX_OUT_PEERS
+			&& state.exchange.peers.out[slot_index].is_active) {
+		slot_index++;
+	}
+	if (slot_index >= NANOTORRENT_MAX_OUT_PEERS) {
+		// No more slots available
+		return false;
+	}
+	if (nanotorrent_peer_find(peer) != NULL) {
+		// Already connected with this peer
+		return true;
+	}
+	slot = &state.exchange.peers.out[slot_index];
+	// TODO Move to peer init?
+	memset(slot, 0, sizeof(*slot));
+	slot->peer_info = peer;
+	slot->is_active = true;
+	// TODO Send initial HAVE
+	return true;
+}
+
+void nanotorrent_peer_connect_all(nanotorrent_peer_info_t *peers,
+		uint8_t num_peers) {
 	int i;
 	for (i = 0; i < num_peers; i++) {
-		// Find next available slot
-		while (slot_index < NANOTORRENT_MAX_OUT_PEERS
-				&& state.exchange.peers.out[slot_index].is_active) {
-			slot_index++;
-		}
-		if (slot_index >= NANOTORRENT_MAX_OUT_PEERS) {
+		if (!nanotorrent_peer_connect(peers[i])) {
 			// No more slots available
 			break;
 		}
-		if (nanotorrent_peer_find(peers[i]) != NULL) {
-			// Already connected with this peer
-			continue;
-		}
-		slot = &state.exchange.peers.out[slot_index];
-		// TODO Move to peer init?
-		memset(slot, 0, sizeof(*slot));
-		slot->peer_info = peers[i];
-		slot->is_active = true;
-		// TODO Send initial HAVE
-		slot_index++;
 	}
 }
 
-void nanotorrent_peer_disconnect(nanotorrent_peer_info_t peer) {
+void nanotorrent_peer_remove(nanotorrent_peer_state_t *peer) {
+	// Deactivate
+	peer->is_active = false;
+	// Stop retrying requests
+	nanotorrent_retry_stop(&peer->piece_retry);
+}
+
+bool nanotorrent_peer_disconnect(nanotorrent_peer_info_t peer) {
 	nanotorrent_peer_state_t *slot = nanotorrent_peer_find(peer);
 	if (slot == NULL) {
-		return;
+		return false;
 	}
-	// TODO Close peer connection
+	// Remove peer connection
+	nanotorrent_peer_remove(slot);
+	// TODO Send close message
+	return true;
 }
 
 void nanotorrent_peer_send_message(const uint8_t *buffer,

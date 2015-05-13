@@ -82,8 +82,9 @@ void nanotorrent_peer_init();
 void nanotorrent_peer_shutdown();
 
 uint8_t nanotorrent_peer_active_count();
-void nanotorrent_peer_connect(nanotorrent_peer_info_t *peers, uint8_t num_peers);
-void nanotorrent_peer_disconnect(nanotorrent_peer_info_t peer);
-void nanotorrent_peer_force_disconnect(nanotorrent_peer_info_t peer);
+bool nanotorrent_peer_connect(nanotorrent_peer_info_t peer);
+void nanotorrent_peer_connect_all(nanotorrent_peer_info_t *peers,
+		uint8_t num_peers);
+bool nanotorrent_peer_disconnect(nanotorrent_peer_info_t peer);
 
 #endif /* NANOTORRENT_PEER_H_ */
