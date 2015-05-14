@@ -54,13 +54,28 @@
 #define NANOTORRENT_ANNOUNCE_REFRESH_PERIOD (60 * CLOCK_SECOND)
 
 /**
+ * Maximum number of concurrent peer data requests
+ */
+#define NANOTORRENT_MAX_PEER_REQUESTS 5
+
+/**
  * Maximum number of retries for a peer data request
  */
-#define NANOTORRENT_MAX_PEER_DATA_RETRIES 3
+#define NANOTORRENT_MAX_PEER_RETRIES 3
 
 /**
  * Base timeout for retrying a peer data request
  */
-#define NANOTORRENT_PEER_DATA_RETRY_TIMEOUT (5 * CLOCK_SECOND)
+#define NANOTORRENT_PEER_RETRY_TIMEOUT (5 * CLOCK_SECOND)
+
+/**
+ * Time between two heartbeats to connected peers
+ */
+#define NANOTORRENT_PEER_HEARTBEAT_PERIOD (30 * CLOCK_SECOND)
+
+/**
+ * Timeout for a heartbeat to be expired
+ */
+#define NANOTORRENT_PEER_HEARTBEAT_TIMEOUT (3 * NANOTORRENT_PEER_HEARTBEAT_PERIOD)
 
 #endif /* NANOTORRENT_CONFIG_H_ */
