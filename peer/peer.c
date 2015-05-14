@@ -16,10 +16,9 @@
  */
 static struct udp_socket peer_socket;
 
-void nanotorrent_peer_send_close(const nanotorrent_peer_info_t *remote_peer);
-void nanotorrent_peer_send_data_request(
-		const nanotorrent_peer_info_t *remote_peer, uint8_t piece_index,
-		uint16_t data_start);
+void nanotorrent_peer_send_close(const nanotorrent_peer_info_t *peer);
+void nanotorrent_peer_send_data_request(const nanotorrent_peer_info_t *peer,
+		uint8_t piece_index, uint16_t data_start);
 
 void nanotorrent_peer_handle_request_retry(nanotorrent_retry_event_t event,
 		void *data);
@@ -69,19 +68,18 @@ uint8_t nanotorrent_peer_count() {
 }
 
 nanotorrent_peer_conn_t *nanotorrent_peer_find(
-		const nanotorrent_peer_info_t *peer_info) {
+		const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_conn_t *conn;
 	ARRAY_FOR(conn, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
 	{
-		if (conn->is_valid
-				&& nanotorrent_peer_info_cmp(peer_info, &conn->peer_info)) {
+		if (conn->is_valid && nanotorrent_peer_info_cmp(peer, &conn->peer_info)) {
 			return conn;
 		}
 	}
 	return NULL;
 }
 
-nanotorrent_peer_conn_t *nanotorrent_peer_find_out_slot() {
+nanotorrent_peer_conn_t *nanotorrent_peer_allocate_out() {
 	nanotorrent_peer_conn_t *conn;
 	// Find first available connection slot
 	ARRAY_FOR(conn, state.exchange.peers.out, NANOTORRENT_MAX_OUT_PEERS)
@@ -93,7 +91,7 @@ nanotorrent_peer_conn_t *nanotorrent_peer_find_out_slot() {
 	return NULL;
 }
 
-nanotorrent_peer_conn_t *nanotorrent_peer_find_in_slot() {
+nanotorrent_peer_conn_t *nanotorrent_peer_allocate_in() {
 	nanotorrent_peer_conn_t *conn;
 	// Find first available connection conn
 	ARRAY_FOR(conn, state.exchange.peers.in, NANOTORRENT_MAX_IN_PEERS)
@@ -117,21 +115,21 @@ void nanotorrent_peer_remove(nanotorrent_peer_conn_t *conn) {
 }
 
 nanotorrent_peer_conn_t *nanotorrent_peer_connect(
-		const nanotorrent_peer_info_t *peer_info) {
+		const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_conn_t *conn;
-	conn = nanotorrent_peer_find(peer_info);
+	conn = nanotorrent_peer_find(peer);
 	if (conn != NULL) {
 		// Already connected with this peer
 		return conn;
 	}
 	// Find available outgoing slot
-	conn = nanotorrent_peer_find_out_slot();
+	conn = nanotorrent_peer_allocate_out();
 	if (conn == NULL) {
 		// No more slots available
 		return NULL;
 	}
 	// Add peer connection
-	conn->peer_info = *peer_info;
+	conn->peer_info = *peer;
 	nanotorrent_peer_add(conn);
 	return conn;
 }
@@ -148,28 +146,28 @@ void nanotorrent_peer_connect_all(const nanotorrent_peer_info_t *peers,
 }
 
 nanotorrent_peer_conn_t *nanotorrent_peer_accept(
-		const nanotorrent_peer_info_t *peer_info) {
+		const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_conn_t *conn;
-	conn = nanotorrent_peer_find(peer_info);
+	conn = nanotorrent_peer_find(peer);
 	if (conn != NULL) {
 		// Already connected with this peer
 		return conn;
 	}
 	// Find available incoming slot
-	conn = nanotorrent_peer_find_in_slot();
+	conn = nanotorrent_peer_allocate_in();
 	if (conn == NULL) {
 		// No more slots available
 		return NULL;
 	}
 	// Add peer connection
-	conn->peer_info = *peer_info;
+	conn->peer_info = *peer;
 	nanotorrent_peer_add(conn);
 	return conn;
 }
 
-bool nanotorrent_peer_force_disconnect(const nanotorrent_peer_info_t *peer_info) {
+bool nanotorrent_peer_force_disconnect(const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_conn_t *conn;
-	conn = nanotorrent_peer_find(peer_info);
+	conn = nanotorrent_peer_find(peer);
 	if (conn == NULL) {
 		return false;
 	}
@@ -178,8 +176,8 @@ bool nanotorrent_peer_force_disconnect(const nanotorrent_peer_info_t *peer_info)
 	return true;
 }
 
-bool nanotorrent_peer_disconnect(const nanotorrent_peer_info_t *peer_info) {
-	if (!nanotorrent_peer_force_disconnect(peer_info)) {
+bool nanotorrent_peer_disconnect(const nanotorrent_peer_info_t *peer) {
+	if (!nanotorrent_peer_force_disconnect(peer)) {
 		return false;
 	}
 	// TODO Send CLOSE message
@@ -219,9 +217,8 @@ void nanotorrent_peer_request_cancel(nanotorrent_piece_request_t *request) {
 	nanotorrent_retry_stop(&request->retry);
 }
 
-bool nanotorrent_peer_should_receive_data(
-		const nanotorrent_peer_info_t *peer_info, uint8_t piece_index,
-		uint16_t data_offset, uint16_t data_length) {
+bool nanotorrent_peer_should_receive_data(const nanotorrent_peer_info_t *peer,
+		uint8_t piece_index, uint16_t data_offset, uint16_t data_length) {
 	// Ignore if we already have piece
 	if (nanotorrent_piece_is_complete(piece_index)) {
 		return false;
@@ -239,7 +236,7 @@ bool nanotorrent_peer_should_receive_data(
 	} else {
 		// Opportunistic: try to add request for this data
 		nanotorrent_peer_conn_t *conn;
-		conn = nanotorrent_peer_connect(peer_info);
+		conn = nanotorrent_peer_connect(peer);
 		if (conn == NULL) {
 			return false;
 		}
@@ -247,7 +244,7 @@ bool nanotorrent_peer_should_receive_data(
 		if (request == NULL) {
 			return false;
 		}
-		request->peer = *peer_info;
+		request->peer = *peer;
 		request->index = piece_index;
 		request->offset = data_offset + data_length;
 		return true;
@@ -255,7 +252,7 @@ bool nanotorrent_peer_should_receive_data(
 	return false;
 }
 
-void nanotorrent_peer_data_received(const nanotorrent_peer_info_t *peer_info,
+void nanotorrent_peer_data_received(const nanotorrent_peer_info_t *peer,
 		uint8_t piece_index, uint16_t data_offset, uint16_t data_length) {
 	nanotorrent_piece_request_t *request;
 	request = nanotorrent_peer_find_request(piece_index);
@@ -264,7 +261,7 @@ void nanotorrent_peer_data_received(const nanotorrent_peer_info_t *peer_info,
 		return;
 	}
 	// Change request uploader
-	request->peer = *peer_info;
+	request->peer = *peer;
 	// Is piece completed?
 	uint16_t piece_size = nanotorrent_piece_size(&state.desc.info, piece_index);
 	uint16_t next_offset = data_offset + data_length;
@@ -312,9 +309,9 @@ void nanotorrent_peer_handle_request_retry(nanotorrent_retry_event_t event,
 }
 
 void nanotorrent_peer_send_message(const uint8_t *buffer,
-		uint16_t buffer_length, const nanotorrent_peer_info_t *remote_peer) {
-	udp_socket_sendto(&peer_socket, buffer, buffer_length,
-			&remote_peer->peer_ip, NANOTORRENT_PEER_PORT);
+		uint16_t buffer_length, const nanotorrent_peer_info_t *peer) {
+	udp_socket_sendto(&peer_socket, buffer, buffer_length, &peer->peer_ip,
+			NANOTORRENT_PEER_PORT);
 }
 
 CC_INLINE void nanotorrent_peer_make_header(
@@ -324,7 +321,7 @@ CC_INLINE void nanotorrent_peer_make_header(
 	header->have = state.piece.have;
 }
 
-void nanotorrent_peer_send_close(const nanotorrent_peer_info_t *remote_peer) {
+void nanotorrent_peer_send_close(const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_close_t message;
 	nanotorrent_peer_make_header(&message.header, NANOTRACKER_PEER_CLOSE);
 
@@ -333,10 +330,10 @@ void nanotorrent_peer_send_close(const nanotorrent_peer_info_t *remote_peer) {
 	nanotorrent_pack_peer_close(&cur, &message);
 	uint16_t length = cur - buffer;
 
-	nanotorrent_peer_send_message(buffer, length, remote_peer);
+	nanotorrent_peer_send_message(buffer, length, peer);
 }
 
-void nanotorrent_peer_send_have(const nanotorrent_peer_info_t *remote_peer) {
+void nanotorrent_peer_send_have(const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_have_t message;
 	nanotorrent_peer_make_header(&message.header, NANOTRACKER_PEER_CLOSE);
 
@@ -345,12 +342,11 @@ void nanotorrent_peer_send_have(const nanotorrent_peer_info_t *remote_peer) {
 	nanotorrent_pack_peer_have(&cur, &message);
 	uint16_t length = cur - buffer;
 
-	nanotorrent_peer_send_message(buffer, length, remote_peer);
+	nanotorrent_peer_send_message(buffer, length, peer);
 }
 
-void nanotorrent_peer_send_data_request(
-		const nanotorrent_peer_info_t *remote_peer, uint8_t piece_index,
-		uint16_t data_start) {
+void nanotorrent_peer_send_data_request(const nanotorrent_peer_info_t *peer,
+		uint8_t piece_index, uint16_t data_start) {
 	nanotorrent_peer_data_t request;
 	nanotorrent_peer_make_header(&request.header,
 			NANOTRACKER_PEER_DATA_REQUEST);
@@ -362,7 +358,7 @@ void nanotorrent_peer_send_data_request(
 	nanotorrent_pack_peer_data(&cur, &request);
 	uint16_t length = cur - buffer;
 
-	nanotorrent_peer_send_message(buffer, length, remote_peer);
+	nanotorrent_peer_send_message(buffer, length, peer);
 }
 
 uint16_t nanotorrent_peer_write_data_reply(uint8_t **cur, uint16_t buffer_size,
@@ -392,7 +388,7 @@ uint16_t nanotorrent_peer_write_data_reply(uint8_t **cur, uint16_t buffer_size,
 }
 
 void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
-		uint16_t buffer_length, const nanotorrent_peer_info_t *remote_peer) {
+		uint16_t buffer_length, const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_data_t request;
 
 	// Parse request header
@@ -417,11 +413,11 @@ void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
 
 	// Send reply
 	uint16_t reply_length = reply_cur - reply_buffer;
-	nanotorrent_peer_send_message(reply_buffer, reply_length, remote_peer);
+	nanotorrent_peer_send_message(reply_buffer, reply_length, peer);
 }
 
 void nanotorrent_peer_handle_data_reply(const uint8_t *buffer,
-		uint16_t buffer_length, const nanotorrent_peer_info_t *remote_peer) {
+		uint16_t buffer_length, const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_data_t reply;
 
 	// Parse reply header
@@ -431,7 +427,7 @@ void nanotorrent_peer_handle_data_reply(const uint8_t *buffer,
 	uint16_t data_length = buffer_length - header_length;
 
 	// Check if we are interested in this data
-	if (nanotorrent_peer_should_receive_data(remote_peer, reply.piece_index,
+	if (nanotorrent_peer_should_receive_data(peer, reply.piece_index,
 			reply.data_start, data_length)) {
 		return;
 	}
@@ -445,8 +441,8 @@ void nanotorrent_peer_handle_data_reply(const uint8_t *buffer,
 	}
 
 	// Handle receipt
-	nanotorrent_peer_data_received(remote_peer, reply.piece_index,
-			reply.data_start, written);
+	nanotorrent_peer_data_received(peer, reply.piece_index, reply.data_start,
+			written);
 }
 
 void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
@@ -468,25 +464,25 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 	}
 
 	// Remote peer info
-	nanotorrent_peer_info_t remote_peer;
-	uip_ip6addr_copy(&remote_peer.peer_ip, src_addr);
+	nanotorrent_peer_info_t peer;
+	uip_ip6addr_copy(&peer.peer_ip, src_addr);
 
 	if (header.type == NANOTRACKER_PEER_CLOSE) {
 		// Handle close immediately
-		nanotorrent_peer_force_disconnect(&remote_peer);
+		nanotorrent_peer_force_disconnect(&peer);
 		return;
 	} else if (header.type == NANOTRACKER_PEER_DATA_REPLY) {
 		// Handle data reply first
 		// This can add opportunistic connections and requests
-		nanotorrent_peer_handle_data_reply(data, datalen, &remote_peer);
+		nanotorrent_peer_handle_data_reply(data, datalen, &peer);
 	}
 
 	// Accept connection
 	nanotorrent_peer_conn_t *conn;
-	conn = nanotorrent_peer_accept(&remote_peer);
+	conn = nanotorrent_peer_accept(&peer);
 	if (conn == NULL) {
 		WARN("Cannot accept peer");
-		PRINT6ADDR(&remote_peer.peer_ip);
+		PRINT6ADDR(&peer.peer_ip);
 		return;
 	}
 
@@ -502,7 +498,7 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 		break;
 	case NANOTRACKER_PEER_DATA_REQUEST:
 		// Reply to data request
-		nanotorrent_peer_handle_data_request(data, datalen, &remote_peer);
+		nanotorrent_peer_handle_data_request(data, datalen, &peer);
 		break;
 	default:
 		WARN("Ignoring peer message with unknown type %u", header.type);
