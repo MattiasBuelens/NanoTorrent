@@ -31,10 +31,10 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 
 void nanotorrent_peer_init() {
 	// Initialize peers
-	nanotorrent_peer_state_t *peer;
-	ARRAY_FOR(peer, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
+	nanotorrent_peer_conn_t *conn;
+	ARRAY_FOR(conn, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
 	{
-		peer->is_valid = false;
+		conn->is_valid = false;
 	}
 	// Initialize requests
 	nanotorrent_piece_request_t *request;
@@ -58,82 +58,82 @@ void nanotorrent_peer_shutdown() {
 
 uint8_t nanotorrent_peer_count() {
 	uint8_t count = 0;
-	nanotorrent_peer_state_t *peer;
-	ARRAY_FOR(peer, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
+	nanotorrent_peer_conn_t *conn;
+	ARRAY_FOR(conn, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
 	{
-		if (peer->is_valid) {
+		if (conn->is_valid) {
 			count++;
 		}
 	}
 	return count;
 }
 
-nanotorrent_peer_state_t *nanotorrent_peer_find(
+nanotorrent_peer_conn_t *nanotorrent_peer_find(
 		const nanotorrent_peer_info_t *peer_info) {
-	nanotorrent_peer_state_t *peer;
-	ARRAY_FOR(peer, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
+	nanotorrent_peer_conn_t *conn;
+	ARRAY_FOR(conn, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
 	{
-		if (peer->is_valid
-				&& nanotorrent_peer_info_cmp(peer_info, &peer->peer_info)) {
-			return peer;
+		if (conn->is_valid
+				&& nanotorrent_peer_info_cmp(peer_info, &conn->peer_info)) {
+			return conn;
 		}
 	}
 	return NULL;
 }
 
-nanotorrent_peer_state_t *nanotorrent_peer_find_out_slot() {
-	nanotorrent_peer_state_t *slot;
-	// Find first available slot
-	ARRAY_FOR(slot, state.exchange.peers.out, NANOTORRENT_MAX_OUT_PEERS)
+nanotorrent_peer_conn_t *nanotorrent_peer_find_out_slot() {
+	nanotorrent_peer_conn_t *conn;
+	// Find first available connection slot
+	ARRAY_FOR(conn, state.exchange.peers.out, NANOTORRENT_MAX_OUT_PEERS)
 	{
-		if (!slot->is_valid) {
-			return slot;
+		if (!conn->is_valid) {
+			return conn;
 		}
 	}
 	return NULL;
 }
 
-nanotorrent_peer_state_t *nanotorrent_peer_find_in_slot() {
-	nanotorrent_peer_state_t *slot;
-	// Find first available slot
-	ARRAY_FOR(slot, state.exchange.peers.in, NANOTORRENT_MAX_IN_PEERS)
+nanotorrent_peer_conn_t *nanotorrent_peer_find_in_slot() {
+	nanotorrent_peer_conn_t *conn;
+	// Find first available connection conn
+	ARRAY_FOR(conn, state.exchange.peers.in, NANOTORRENT_MAX_IN_PEERS)
 	{
-		if (!slot->is_valid) {
-			return slot;
+		if (!conn->is_valid) {
+			return conn;
 		}
 	}
 	return NULL;
 }
 
-void nanotorrent_peer_add(nanotorrent_peer_state_t *peer) {
-	peer->is_valid = true;
-	peer->have = 0;
-	etimer_set(&peer->heartbeat, NANOTORRENT_PEER_HEARTBEAT_TIMEOUT);
+void nanotorrent_peer_add(nanotorrent_peer_conn_t *conn) {
+	conn->is_valid = true;
+	conn->have = 0;
+	etimer_set(&conn->heartbeat, NANOTORRENT_PEER_HEARTBEAT_TIMEOUT);
 }
 
-void nanotorrent_peer_remove(nanotorrent_peer_state_t *peer) {
-	peer->is_valid = false;
-	etimer_stop(&peer->heartbeat);
+void nanotorrent_peer_remove(nanotorrent_peer_conn_t *conn) {
+	conn->is_valid = false;
+	etimer_stop(&conn->heartbeat);
 }
 
-nanotorrent_peer_state_t *nanotorrent_peer_connect(
+nanotorrent_peer_conn_t *nanotorrent_peer_connect(
 		const nanotorrent_peer_info_t *peer_info) {
-	nanotorrent_peer_state_t *peer;
-	peer = nanotorrent_peer_find(peer_info);
-	if (peer != NULL) {
+	nanotorrent_peer_conn_t *conn;
+	conn = nanotorrent_peer_find(peer_info);
+	if (conn != NULL) {
 		// Already connected with this peer
-		return peer;
+		return conn;
 	}
 	// Find available outgoing slot
-	peer = nanotorrent_peer_find_out_slot();
-	if (peer == NULL) {
+	conn = nanotorrent_peer_find_out_slot();
+	if (conn == NULL) {
 		// No more slots available
 		return NULL;
 	}
 	// Add peer connection
-	peer->peer_info = *peer_info;
-	nanotorrent_peer_add(peer);
-	return peer;
+	conn->peer_info = *peer_info;
+	nanotorrent_peer_add(conn);
+	return conn;
 }
 
 void nanotorrent_peer_connect_all(const nanotorrent_peer_info_t *peers,
@@ -147,34 +147,34 @@ void nanotorrent_peer_connect_all(const nanotorrent_peer_info_t *peers,
 	}
 }
 
-nanotorrent_peer_state_t *nanotorrent_peer_accept(
+nanotorrent_peer_conn_t *nanotorrent_peer_accept(
 		const nanotorrent_peer_info_t *peer_info) {
-	nanotorrent_peer_state_t *peer;
-	peer = nanotorrent_peer_find(peer_info);
-	if (peer != NULL) {
+	nanotorrent_peer_conn_t *conn;
+	conn = nanotorrent_peer_find(peer_info);
+	if (conn != NULL) {
 		// Already connected with this peer
-		return peer;
+		return conn;
 	}
 	// Find available incoming slot
-	peer = nanotorrent_peer_find_in_slot();
-	if (peer == NULL) {
+	conn = nanotorrent_peer_find_in_slot();
+	if (conn == NULL) {
 		// No more slots available
 		return NULL;
 	}
 	// Add peer connection
-	peer->peer_info = *peer_info;
-	nanotorrent_peer_add(peer);
-	return peer;
+	conn->peer_info = *peer_info;
+	nanotorrent_peer_add(conn);
+	return conn;
 }
 
 bool nanotorrent_peer_force_disconnect(const nanotorrent_peer_info_t *peer_info) {
-	nanotorrent_peer_state_t *peer;
-	peer = nanotorrent_peer_find(peer_info);
-	if (peer == NULL) {
+	nanotorrent_peer_conn_t *conn;
+	conn = nanotorrent_peer_find(peer_info);
+	if (conn == NULL) {
 		return false;
 	}
 	// Remove peer connection
-	nanotorrent_peer_remove(peer);
+	nanotorrent_peer_remove(conn);
 	return true;
 }
 
@@ -238,9 +238,9 @@ bool nanotorrent_peer_should_receive_data(
 		}
 	} else {
 		// Opportunistic: try to add request for this data
-		nanotorrent_peer_state_t *peer;
-		peer = nanotorrent_peer_connect(peer_info);
-		if (peer == NULL) {
+		nanotorrent_peer_conn_t *conn;
+		conn = nanotorrent_peer_connect(peer_info);
+		if (conn == NULL) {
 			return false;
 		}
 		request = nanotorrent_peer_add_request();
@@ -482,17 +482,17 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 	}
 
 	// Accept connection
-	nanotorrent_peer_state_t *peer;
-	peer = nanotorrent_peer_accept(&remote_peer);
-	if (peer == NULL) {
+	nanotorrent_peer_conn_t *conn;
+	conn = nanotorrent_peer_accept(&remote_peer);
+	if (conn == NULL) {
 		WARN("Cannot accept peer");
 		PRINT6ADDR(&remote_peer.peer_ip);
 		return;
 	}
 
 	// Update peer state
-	peer->have = header.have;
-	etimer_restart(&peer->heartbeat);
+	conn->have = header.have;
+	etimer_restart(&conn->heartbeat);
 	// TODO Schedule new requests?
 
 	switch (header.type) {
