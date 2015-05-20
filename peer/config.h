@@ -54,11 +54,6 @@
 #define NANOTORRENT_ANNOUNCE_REFRESH_PERIOD (60 * CLOCK_SECOND)
 
 /**
- * Maximum number of concurrent peer data requests
- */
-#define NANOTORRENT_MAX_PEER_REQUESTS 5
-
-/**
  * Maximum number of retries for a peer data request
  */
 #define NANOTORRENT_MAX_PEER_RETRIES 3
