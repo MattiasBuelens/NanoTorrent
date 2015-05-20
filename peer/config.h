@@ -19,6 +19,14 @@
 #define NANOTORRENT_FILE_NAME_LENGTH 16
 
 /**
+ * Minimum completion before allowing end-game mode
+ *
+ * Completion is number of completed pieces
+ * divided by total number of pieces
+ */
+#define NANOTORRENT_END_GAME_MIN_COMPLETION 0.8f
+
+/**
  * Maximum number of pieces in a torrent
  */
 #define NANOTORRENT_MAX_PIECES 32

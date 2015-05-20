@@ -92,6 +92,10 @@ void nanotorrent_piece_set_complete(const uint8_t piece_index, bool is_complete)
 	}
 }
 
+uint8_t nanotorrent_piece_count_complete() {
+	return nanotorrent_bitset_count(state.piece.have);
+}
+
 uint16_t nanotorrent_piece_read(const uint8_t piece_index,
 		const uint8_t data_offset, uint8_t *buffer,
 		const uint16_t buffer_length) {

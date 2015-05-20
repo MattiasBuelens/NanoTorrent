@@ -25,6 +25,7 @@ uint32_t nanotorrent_piece_bitset_all();
 bool nanotorrent_piece_is_seed();
 bool nanotorrent_piece_is_complete(uint8_t piece_index);
 void nanotorrent_piece_set_complete(uint8_t piece_index, bool is_complete);
+uint8_t nanotorrent_piece_count_complete();
 
 uint16_t nanotorrent_piece_read(uint8_t piece_index, uint8_t data_offset,
 		uint8_t *buffer, uint16_t buffer_length);

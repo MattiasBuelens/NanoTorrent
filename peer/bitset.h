@@ -60,4 +60,9 @@
 #define nanotorrent_bitset_contains(a, b) \
 	(nanotorrent_bitset_diff(b, a) == 0)
 
+/**
+ * Count the number of set bits.
+ */
+uint8_t nanotorrent_bitset_count(uint32_t set);
+
 #endif /* NANOTORRENT_BITSET_H_ */
