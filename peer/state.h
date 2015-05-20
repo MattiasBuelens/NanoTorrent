@@ -114,6 +114,10 @@ typedef struct nanotorrent_exchange_state {
 		};
 	} peers;
 	/**
+	 * Bitset of pending pieces
+	 */
+	uint32_t pending_pieces;
+	/**
 	 * Pending requests
 	 */
 	nanotorrent_piece_request_t requests[NANOTORRENT_MAX_PEER_REQUESTS];

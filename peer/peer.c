@@ -8,6 +8,7 @@
 #include "peer.h"
 #include "piece.h"
 #include "pack.h"
+#include "bitset.h"
 
 #define state (nanotorrent_state)
 
@@ -195,6 +196,10 @@ nanotorrent_piece_request_t *nanotorrent_peer_add_request() {
 	return NULL;
 }
 
+bool nanotorrent_peer_has_request(uint8_t piece_index) {
+	return nanotorrent_bitset_get(state.exchange.pending_pieces, piece_index);
+}
+
 nanotorrent_piece_request_t *nanotorrent_peer_find_request(uint8_t piece_index) {
 	nanotorrent_piece_request_t *request;
 	ARRAY_FOR(request, state.exchange.requests, NANOTORRENT_MAX_PEER_REQUESTS)
@@ -208,25 +213,27 @@ nanotorrent_piece_request_t *nanotorrent_peer_find_request(uint8_t piece_index) 
 
 void nanotorrent_peer_request_start(nanotorrent_piece_request_t *request) {
 	request->is_valid = true;
+	nanotorrent_bitset_set(state.exchange.pending_pieces, request->index);
 	nanotorrent_retry_start(&request->retry, NANOTORRENT_MAX_PEER_RETRIES,
 			request);
 }
 
 void nanotorrent_peer_request_cancel(nanotorrent_piece_request_t *request) {
 	request->is_valid = false;
+	nanotorrent_bitset_clear(state.exchange.pending_pieces, request->index);
 	nanotorrent_retry_stop(&request->retry);
 }
 
 bool nanotorrent_peer_should_receive_data(const nanotorrent_peer_info_t *peer,
 		uint8_t piece_index, uint16_t data_offset, uint16_t data_length) {
+	nanotorrent_piece_request_t *request;
 	// Ignore if we already have piece
 	if (nanotorrent_piece_is_complete(piece_index)) {
 		return false;
 	}
 	// Already requesting this piece?
-	nanotorrent_piece_request_t *request;
-	request = nanotorrent_peer_find_request(piece_index);
-	if (request != NULL) {
+	if (nanotorrent_peer_has_request(piece_index)) {
+		request = nanotorrent_peer_find_request(piece_index);
 		// Data in range of current request?
 		if (data_offset <= request->offset
 				&& request->offset <= data_offset + data_length) {

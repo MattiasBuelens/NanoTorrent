@@ -21,6 +21,7 @@ void nanotorrent_piece_init();
 void nanotorrent_piece_shutdown();
 
 uint32_t nanotorrent_piece_bitset_all();
+uint32_t nanotorrent_piece_bitset_interesting();
 
 bool nanotorrent_piece_is_seed();
 bool nanotorrent_piece_is_complete(uint8_t piece_index);
