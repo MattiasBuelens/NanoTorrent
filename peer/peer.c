@@ -230,16 +230,25 @@ nanotorrent_piece_request_t *nanotorrent_peer_find_request(uint8_t piece_index) 
 	return NULL;
 }
 
-void nanotorrent_peer_request_start(nanotorrent_piece_request_t *request) {
+void nanotorrent_peer_request_init(nanotorrent_piece_request_t *request) {
 	request->is_valid = true;
+	request->conn->request = request;
 	nanotorrent_bitset_set(state.exchange.pending_pieces, request->index);
+}
+
+void nanotorrent_peer_request_start(nanotorrent_piece_request_t *request) {
+	nanotorrent_peer_request_init(request);
 	nanotorrent_retry_start(&request->retry, NANOTORRENT_MAX_PEER_RETRIES,
 			request);
 }
 
-void nanotorrent_peer_request_cancel(nanotorrent_piece_request_t *request) {
+void nanotorrent_peer_request_stop(nanotorrent_piece_request_t *request) {
 	request->is_valid = false;
 	nanotorrent_bitset_clear(state.exchange.pending_pieces, request->index);
+	if (request->conn != NULL) {
+		request->conn->request = NULL;
+		request->conn = NULL;
+	}
 	nanotorrent_retry_stop(&request->retry);
 }
 
@@ -259,20 +268,32 @@ bool nanotorrent_peer_should_receive_data(const nanotorrent_peer_info_t *peer,
 			// Data valid for current request
 			return true;
 		}
-	} else {
-		// Opportunistic: try to add request for this data
+	} else if (data_offset == 0) {
+		// Peer started sending data for a new piece to some
+		// other peer, but we are not yet requesting that piece.
+		// Try to add a request so we can receive the data ourselves
+		// instead of having to make a new request later on.
 		nanotorrent_peer_conn_t *conn;
 		conn = nanotorrent_peer_connect(peer);
 		if (conn == NULL) {
+			// Cannot connect
+			return false;
+		}
+		if (conn->request != NULL) {
+			// Peer already handling other request
 			return false;
 		}
 		request = nanotorrent_peer_add_request();
 		if (request == NULL) {
+			// Too many pending requests
 			return false;
 		}
-		request->peer = *peer;
+		// Create request
+		// Will be handled in nanotorrent_peer_data_received
+		request->conn = conn;
 		request->index = piece_index;
-		request->offset = data_offset + data_length;
+		request->offset = data_offset;
+		nanotorrent_peer_request_init(request);
 		return true;
 	}
 	return false;
@@ -286,8 +307,6 @@ void nanotorrent_peer_data_received(const nanotorrent_peer_info_t *peer,
 		ERROR("Request should not be null for piece %u", piece_index);
 		return;
 	}
-	// Change request uploader
-	request->peer = *peer;
 	// Is piece completed?
 	uint16_t piece_size = nanotorrent_piece_size(&state.desc.info, piece_index);
 	uint16_t next_offset = data_offset + data_length;
@@ -297,21 +316,19 @@ void nanotorrent_peer_data_received(const nanotorrent_peer_info_t *peer,
 		nanotorrent_peer_request_start(request);
 	} else {
 		// Piece fully received
+		nanotorrent_peer_request_stop(request);
+		// Verify piece
 		sha1_context_t context;
 		bool is_complete = nanotorrent_piece_verify(&context, piece_index);
 		nanotorrent_piece_set_complete(piece_index, is_complete);
 		if (is_complete) {
 			// Piece completed
 			NOTE("Piece %u completed", piece_index);
-			nanotorrent_peer_request_cancel(request);
-			// TODO Select next piece
 		} else {
 			// Piece corrupted
 			WARN("Piece %u corrupted", piece_index);
-			// Restart request
-			request->offset = 0;
-			nanotorrent_peer_request_start(request);
 		}
+		// TODO Trigger piece/peer select
 	}
 }
 
@@ -324,12 +341,15 @@ void nanotorrent_peer_handle_request_retry(nanotorrent_retry_event_t event,
 	switch (event) {
 	case RETRY_AGAIN:
 		// Try again
-		// TODO Send piece request
+		// Send piece request
+		nanotorrent_peer_send_data_request(&request->conn->peer_info,
+				request->index, request->offset);
 		break;
 	case RETRY_STOP:
 		// Stopped retrying
 		// Cancel request
-		nanotorrent_peer_request_cancel(request);
+		nanotorrent_peer_request_stop(request);
+		// TODO Trigger piece/peer select
 		break;
 	}
 }
@@ -337,7 +357,7 @@ void nanotorrent_peer_handle_request_retry(nanotorrent_retry_event_t event,
 void nanotorrent_peer_send_message(const uint8_t *buffer,
 		uint16_t buffer_length, const nanotorrent_peer_info_t *peer) {
 	udp_socket_sendto(&peer_socket, buffer, buffer_length, &peer->peer_ip,
-			NANOTORRENT_PEER_PORT);
+	NANOTORRENT_PEER_PORT);
 }
 
 CC_INLINE void nanotorrent_peer_make_header(
@@ -423,7 +443,7 @@ void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
 
 	// Check if we have requested piece
 	if (!nanotorrent_piece_is_complete(request.piece_index)) {
-		WARN("Peer requested incomplete piece %u", request.piece_index);
+		// Request was probably broadcasted
 		return;
 	}
 
@@ -513,8 +533,7 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 	}
 
 	// Update peer state
-	conn->have = header.have;
-	etimer_restart(&conn->heartbeat);
+	nanotorrent_peer_update_have(conn, header.have);
 	// TODO Schedule new requests?
 
 	switch (header.type) {

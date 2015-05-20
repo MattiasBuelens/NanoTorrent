@@ -43,6 +43,8 @@ typedef struct nanotorrent_swarm_state {
 	bool is_joined;
 } nanotorrent_swarm_state_t;
 
+typedef struct nanotorrent_piece_request nanotorrent_piece_request_t;
+
 /**
  * Peer connection
  */
@@ -60,6 +62,10 @@ typedef struct nanotorrent_peer_conn {
 	 */
 	uint32_t have;
 	/**
+	 * Pending request
+	 */
+	nanotorrent_piece_request_t *request;
+	/**
 	 * Heartbeat timer
 	 */
 	struct etimer heartbeat;
@@ -68,15 +74,15 @@ typedef struct nanotorrent_peer_conn {
 /**
  * Pending piece request
  */
-typedef struct nanotorrent_piece_request {
+struct nanotorrent_piece_request {
 	/**
 	 * Whether this request is valid
 	 */
 	bool is_valid;
 	/**
-	 * Uploading peer
+	 * Owning connection
 	 */
-	nanotorrent_peer_info_t peer;
+	nanotorrent_peer_conn_t *conn;
 	/**
 	 * Piece index of requested piece
 	 */
@@ -89,7 +95,7 @@ typedef struct nanotorrent_piece_request {
 	 * Request retry
 	 */
 	nanotorrent_retry_t retry;
-} nanotorrent_piece_request_t;
+};
 
 #define NANOTORRENT_MAX_EXCHANGE_PEERS (NANOTORRENT_MAX_OUT_PEERS + NANOTORRENT_MAX_IN_PEERS)
 
