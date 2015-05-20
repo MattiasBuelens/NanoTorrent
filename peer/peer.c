@@ -185,6 +185,25 @@ bool nanotorrent_peer_disconnect(const nanotorrent_peer_info_t *peer) {
 	return true;
 }
 
+uint32_t nanotorrent_peer_interesting(nanotorrent_peer_conn_t *peer) {
+	uint32_t interesting = peer->have;
+	interesting = nanotorrent_bitset_diff(interesting, state.piece.have);
+	interesting = nanotorrent_bitset_diff(interesting,
+			state.exchange.pending_pieces);
+	return interesting;
+}
+
+uint32_t nanotorrent_peer_interesting_endgame(nanotorrent_peer_conn_t *peer) {
+	uint32_t interesting = peer->have;
+	interesting = nanotorrent_bitset_diff(interesting, state.piece.have);
+	return interesting;
+}
+
+void nanotorrent_peer_update_have(nanotorrent_peer_conn_t *conn, uint32_t have) {
+	conn->have |= have;
+	etimer_restart(&conn->heartbeat);
+}
+
 nanotorrent_piece_request_t *nanotorrent_peer_add_request() {
 	nanotorrent_piece_request_t *request;
 	ARRAY_FOR(request, state.exchange.requests, NANOTORRENT_MAX_PEER_REQUESTS)

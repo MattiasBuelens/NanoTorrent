@@ -90,4 +90,7 @@ nanotorrent_peer_conn_t *nanotorrent_peer_accept(
 		const nanotorrent_peer_info_t *peer);
 bool nanotorrent_peer_disconnect(const nanotorrent_peer_info_t *peer);
 
+uint32_t nanotorrent_peer_interesting(nanotorrent_peer_conn_t *peer);
+uint32_t nanotorrent_peer_interesting_endgame(nanotorrent_peer_conn_t *peer);
+
 #endif /* NANOTORRENT_PEER_H_ */

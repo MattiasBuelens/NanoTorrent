@@ -67,14 +67,6 @@ uint32_t nanotorrent_piece_bitset_all() {
 	return (1 << state.desc.info.num_pieces) - 1;
 }
 
-uint32_t nanotorrent_piece_bitset_interesting() {
-	uint32_t interesting = nanotorrent_piece_bitset_all();
-	interesting = nanotorrent_bitset_diff(interesting, state.piece.have);
-	interesting = nanotorrent_bitset_diff(interesting,
-			state.exchange.pending_pieces);
-	return interesting;
-}
-
 bool nanotorrent_piece_is_seed() {
 	uint32_t all = nanotorrent_piece_bitset_all();
 	return nanotorrent_bitset_contains(all, state.piece.have);
