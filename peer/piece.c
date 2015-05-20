@@ -6,6 +6,7 @@
  */
 
 #include "piece.h"
+#include "bitset.h"
 #include "cfs/cfs.h"
 
 #define state (nanotorrent_state)
@@ -62,9 +63,13 @@ void nanotorrent_piece_shutdown() {
 	state.piece.file = -1;
 }
 
+uint32_t nanotorrent_piece_bitset_all() {
+	return (1 << state.desc.info.num_pieces) - 1;
+}
+
 bool nanotorrent_piece_is_seed() {
-	uint32_t mask = (1 << state.desc.info.num_pieces) - 1;
-	return (state.piece.have & mask) == mask;
+	uint32_t all = nanotorrent_piece_bitset_all();
+	return nanotorrent_bitset_contains(all, state.piece.have);
 }
 
 bool nanotorrent_piece_is_complete(const uint8_t piece_index) {
@@ -72,7 +77,7 @@ bool nanotorrent_piece_is_complete(const uint8_t piece_index) {
 		ERROR("Invalid piece index: %u", piece_index);
 		return false;
 	}
-	return (state.piece.have >> piece_index) & 1;
+	return nanotorrent_bitset_get(state.piece.have, piece_index);
 }
 
 void nanotorrent_piece_set_complete(const uint8_t piece_index, bool is_complete) {
@@ -81,9 +86,9 @@ void nanotorrent_piece_set_complete(const uint8_t piece_index, bool is_complete)
 		return;
 	}
 	if (is_complete) {
-		state.piece.have |= (1 << piece_index);
+		nanotorrent_bitset_set(state.piece.have, piece_index);
 	} else {
-		state.piece.have &= ~(1 << piece_index);
+		nanotorrent_bitset_clear(state.piece.have, piece_index);
 	}
 }
 
@@ -210,8 +215,9 @@ uint32_t nanotorrent_piece_verify_all(sha1_context_t *context) {
 	uint32_t result = 0;
 	uint8_t i;
 	for (i = 0; i < state.desc.info.num_pieces; i++) {
-		bool piece_result = nanotorrent_piece_verify(context, i);
-		result |= piece_result << i;
+		if (nanotorrent_piece_verify(context, i)) {
+			nanotorrent_bitset_set(result, i);
+		}
 	}
 	return result;
 }
