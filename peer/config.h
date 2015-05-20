@@ -81,4 +81,9 @@
  */
 #define NANOTORRENT_PEER_HEARTBEAT_TIMEOUT (3 * NANOTORRENT_PEER_HEARTBEAT_PERIOD)
 
+/**
+ * Time to keep seeding after completing torrent
+ */
+#define NANOTORRENT_SEED_TIME (300 * CLOCK_SECOND)
+
 #endif /* NANOTORRENT_CONFIG_H_ */

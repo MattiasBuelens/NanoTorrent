@@ -15,6 +15,8 @@
 nanotorrent_torrent_state_t nanotorrent_state;
 #define state (nanotorrent_state)
 
+struct etimer seed_timer;
+
 void nanotorrent_start(nanotorrent_torrent_desc_t desc, const char *file_name) {
 	// Initialize state
 	memset(&state, 0, sizeof(state));
@@ -66,12 +68,24 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		NANOTORRENT_SWARM_WAIT_EVENT(ev, data, NANOTORRENT_SWARM_JOINED);
 		PRINTF("Joined the swarm\n");
 
-		while (nanotorrent_swarm_is_joined()) {
-
+		// Leeching
+		while (!nanotorrent_piece_is_seed()) {
 			// TODO Connect with peers
-			// TODO Piece selection and peer data requests
+			PROCESS_YIELD()
+			;
+		}
 
-			PROCESS_YIELD();
+		// Seeding
+		if (NANOTORRENT_SEED_TIME < 0) {
+			// Seed forever
+			while (true) {
+				PROCESS_YIELD()
+				;
+			}
+		} else {
+			// Seed for a while
+			etimer_set(&seed_timer, NANOTORRENT_SEED_TIME);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&seed_timer));
 		}
 
 	PROCESS_END()
