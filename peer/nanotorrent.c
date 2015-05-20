@@ -59,20 +59,49 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		nanotorrent_init();
 
 		// Wait until joining
-		NANOTORRENT_SWARM_WAIT_EVENT(ev, data, NANOTORRENT_SWARM_JOINING);
+		PROCESS_WAIT_EVENT_UNTIL(nanotorrent_swarm_is_event(ev));
+		if (nanotorrent_swarm_event_type(data) != NANOTORRENT_SWARM_JOINING) {
+			ERROR("Failed to join swarm");
+			PROCESS_EXIT()
+			;
+		}
+
 		PRINTF("Joining swarm with tracker [");
 		PRINT6ADDR(&state.desc.tracker_ip);
 		PRINTF("]:%u\n", state.desc.tracker_port);
 
 		// Wait until joined
-		NANOTORRENT_SWARM_WAIT_EVENT(ev, data, NANOTORRENT_SWARM_JOINED);
+		PROCESS_WAIT_EVENT_UNTIL(nanotorrent_swarm_is_event(ev));
+		if (nanotorrent_swarm_event_type(data) != NANOTORRENT_SWARM_JOINED) {
+			ERROR("Failed to join swarm");
+			PROCESS_EXIT()
+			;
+		}
 		PRINTF("Joined the swarm\n");
+
+		// TODO Connect with peers
 
 		// Leeching
 		while (!nanotorrent_piece_is_seed()) {
-			// TODO Connect with peers
-			PROCESS_YIELD()
-			;
+			if (nanotorrent_swarm_is_event(ev)) {
+				switch (nanotorrent_swarm_event_type(data)) {
+				case NANOTORRENT_SWARM_REFRESHED:
+					// TODO Connect with peers
+					break;
+				case NANOTORRENT_SWARM_LEFT:
+					ERROR("Lost connection with swarm");
+					PROCESS_EXIT()
+					;
+					break;
+				default:
+					ERROR("Unexpected swarm event");
+					PROCESS_EXIT()
+					;
+				}
+			}
+
+			// TODO Wait for swarm event or piece completion
+			PROCESS_WAIT_EVENT_UNTIL(nanotorrent_swarm_is_event(ev));
 		}
 
 		// Seeding

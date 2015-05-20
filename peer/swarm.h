@@ -83,15 +83,21 @@ typedef enum nanotorrent_swarm_event_type {
 	 */
 	NANOTORRENT_SWARM_JOINED,
 	/**
+	 * Refreshed swarm
+	 */
+	NANOTORRENT_SWARM_REFRESHED,
+	/**
 	 * Left swarm
 	 */
 	NANOTORRENT_SWARM_LEFT
 } nanotorrent_swarm_event_type_t;
 process_event_t nanotorrent_swarm_event;
 
-#define NANOTORRENT_SWARM_WAIT_EVENT(ev, data, type) \
-	PROCESS_WAIT_EVENT_UNTIL((ev) == nanotorrent_swarm_event \
-			&& *((nanotorrent_swarm_event_type_t *) (data)) == (type))
+#define nanotorrent_swarm_is_event(ev) \
+	((ev) == nanotorrent_swarm_event)
+
+#define nanotorrent_swarm_event_type(data) \
+	(*((nanotorrent_swarm_event_type_t *) (data)))
 
 void nanotorrent_swarm_start();
 void nanotorrent_swarm_stop();

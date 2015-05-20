@@ -123,7 +123,7 @@ void nanotorrent_swarm_announce_send(nanotracker_announce_event_t event) {
 void nanotorrent_swarm_announce_start(nanotracker_announce_event_t event) {
 	announce_retry_event = event;
 	nanotorrent_retry_start(&announce_retry, NANOTORRENT_MAX_ANNOUNCE_RETRIES,
-			NULL);
+			(NULL));
 }
 
 void nanotorrent_swarm_announce_stop() {
@@ -228,6 +228,13 @@ void nanotorrent_swarm_handle_join() {
 	nanotorrent_swarm_post_event(NANOTORRENT_SWARM_JOINED);
 }
 
+void nanotorrent_swarm_handle_refresh() {
+	// Restart periodic announce refresh
+	etimer_reset(&refresh);
+	// Notify refreshed
+	nanotorrent_swarm_post_event(NANOTORRENT_SWARM_REFRESHED);
+}
+
 void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 		void *ptr, const uip_ipaddr_t *src_addr, uint16_t src_port,
 		const uip_ipaddr_t *dest_addr, uint16_t dest_port, const uint8_t *data,
@@ -262,7 +269,7 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 		break;
 	case NANOTRACKER_ANNOUNCE_REFRESH:
 		// Successful refresh
-		etimer_reset(&refresh);
+		nanotorrent_swarm_handle_refresh();
 		break;
 	}
 }
