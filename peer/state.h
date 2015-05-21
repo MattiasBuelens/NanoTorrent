@@ -26,24 +26,6 @@ typedef struct nanotorrent_peer_info {
 	(uip_ip6addr_cmp(&(a)->peer_ip, &(b)->peer_ip))
 
 /**
- * Swarm state
- */
-typedef struct nanotorrent_swarm_state {
-	/**
-	 * Number of known peers
-	 */
-	uint8_t num_peers;
-	/**
-	 * Known peers
-	 */
-	nanotorrent_peer_info_t peers[NANOTORRENT_MAX_SWARM_PEERS];
-	/**
-	 * Whether this peer has joined the swarm
-	 */
-	bool is_joined;
-} nanotorrent_swarm_state_t;
-
-/**
  * Peer connection
  */
 typedef struct nanotorrent_peer_conn {
@@ -139,10 +121,6 @@ typedef struct nanotorrent_torrent_state {
 	 * Torrent descriptor
 	 */
 	nanotorrent_torrent_desc_t desc;
-	/**
-	 * Swarm state
-	 */
-	nanotorrent_swarm_state_t swarm;
 	/**
 	 * Exchange state
 	 */

@@ -13,6 +13,17 @@
 #define state (nanotorrent_state)
 
 /**
+ * Swarm state
+ */
+static bool is_joined;
+
+/**
+ * Known peers
+ */
+static uint8_t num_peers;
+static nanotorrent_peer_info_t peers[NANOTORRENT_MAX_SWARM_PEERS];
+
+/**
  * UDP socket with tracker
  */
 static struct udp_socket tracker_socket;
@@ -56,8 +67,8 @@ void nanotorrent_swarm_stop() {
 
 void nanotorrent_swarm_init() {
 	// Clear connected peers
-	state.swarm.num_peers = 0;
-	memset(&state.swarm.peers, 0, sizeof(state.swarm.peers));
+	num_peers = 0;
+	memset(&peers, 0, sizeof(peers));
 	// Initialize announce retrying
 	nanotorrent_retry_init(&announce_retry, NANOTORRENT_ANNOUNCE_RETRY_TIMEOUT,
 			nanotorrent_swarm_announce_retry);
@@ -84,11 +95,11 @@ bool nanotorrent_swarm_is_ready() {
 }
 
 bool nanotorrent_swarm_is_joined() {
-	return state.swarm.is_joined;
+	return is_joined;
 }
 
-void nanotorrent_swarm_set_joined(bool is_joined) {
-	state.swarm.is_joined = is_joined;
+void nanotorrent_swarm_set_joined(bool joined) {
+	is_joined = joined;
 }
 
 void nanotorrent_swarm_announce_send(nanotracker_announce_event_t event) {
@@ -255,10 +266,10 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 	}
 
 	// Update number of peers
-	state.swarm.num_peers = MIN(reply.num_peers, NANOTORRENT_MAX_SWARM_PEERS);
+	num_peers = MIN(reply.num_peers, NANOTORRENT_MAX_SWARM_PEERS);
 	// Read peers into state
-	for (i = 0; i < state.swarm.num_peers; i++) {
-		nanotorrent_unpack_peer_info(&cur, &state.swarm.peers[i]);
+	for (i = 0; i < num_peers; i++) {
+		nanotorrent_unpack_peer_info(&cur, &peers[i]);
 	}
 
 	// Mark as joined
