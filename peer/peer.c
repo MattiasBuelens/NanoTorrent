@@ -147,6 +147,7 @@ nanotorrent_peer_conn_t *nanotorrent_peer_connect_with(
 	// Add peer connection
 	conn->peer_info = *peer;
 	nanotorrent_peer_add(conn);
+	// TODO Notify connect
 	return conn;
 }
 
@@ -174,6 +175,7 @@ nanotorrent_peer_conn_t *nanotorrent_peer_accept(
 void nanotorrent_peer_force_disconnect_conn(nanotorrent_peer_conn_t *conn) {
 	nanotorrent_peer_remove(conn);
 	nanotorrent_peer_free(conn);
+	// TODO Notify disconnect
 }
 
 void nanotorrent_peer_disconnect_conn(nanotorrent_peer_conn_t *conn) {
