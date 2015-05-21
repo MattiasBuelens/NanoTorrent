@@ -71,8 +71,6 @@ typedef struct nanotorrent_announce_reply {
 	uint8_t num_peers;
 } nanotorrent_announce_reply_t;
 
-PROCESS_NAME(nanotorrent_swarm_process);
-
 /**
  * Swarm state
  */
@@ -95,6 +93,7 @@ typedef enum nanotorrent_swarm_state {
 	NANOTORRENT_SWARM_JOINED
 } nanotorrent_swarm_state_t;
 
+PROCESS_NAME(nanotorrent_swarm_process);
 process_event_t nanotorrent_swarm_event;
 
 #define nanotorrent_swarm_is_event(ev) \

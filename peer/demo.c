@@ -37,8 +37,7 @@ PROCESS_THREAD(nanotorrent_demo_process, ev, data) {
 
 		// TODO For debugging
 		while (1) {
-			PROCESS_WAIT_EVENT()
-			;
+			PROCESS_WAIT_EVENT();
 		}
 
 	PROCESS_END()

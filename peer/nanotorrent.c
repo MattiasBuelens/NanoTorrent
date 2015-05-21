@@ -100,8 +100,7 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		PROCESS_WAIT_EVENT_UNTIL(nanotorrent_swarm_is_event(ev));
 		if (!nanotorrent_swarm_can_join()) {
 			ERROR("Failed to join swarm");
-			PROCESS_EXIT()
-			;
+			PROCESS_EXIT();
 		}
 
 		PRINTF("Joining swarm with tracker [");
@@ -112,8 +111,7 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		PROCESS_WAIT_EVENT_UNTIL(nanotorrent_swarm_is_event(ev));
 		if (!nanotorrent_swarm_is_joined()) {
 			ERROR("Failed to join swarm");
-			PROCESS_EXIT()
-			;
+			PROCESS_EXIT();
 		}
 		PRINTF("Joined the swarm\n");
 
@@ -125,8 +123,7 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 			// Handle swarm event
 			if (nanotorrent_swarm_is_event(ev)
 					&& !nanotorrent_handle_swarm_event()) {
-				PROCESS_EXIT()
-				;
+				PROCESS_EXIT();
 			}
 
 			// TODO Handle piece completion
