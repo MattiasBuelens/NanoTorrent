@@ -73,7 +73,18 @@ typedef struct nanotorrent_announce_reply {
 
 PROCESS_NAME(nanotorrent_swarm_process);
 
-typedef enum nanotorrent_swarm_event_type {
+/**
+ * Swarm state
+ */
+typedef enum nanotorrent_swarm_state {
+	/**
+	 * Initializing
+	 */
+	NANOTORRENT_SWARM_INIT,
+	/**
+	 * Left the swarm
+	 */
+	NANOTORRENT_SWARM_LEFT,
 	/**
 	 * Joining swarm
 	 */
@@ -81,33 +92,27 @@ typedef enum nanotorrent_swarm_event_type {
 	/**
 	 * Joined swarm
 	 */
-	NANOTORRENT_SWARM_JOINED,
-	/**
-	 * Refreshed swarm
-	 */
-	NANOTORRENT_SWARM_REFRESHED,
-	/**
-	 * Left swarm
-	 */
-	NANOTORRENT_SWARM_LEFT
-} nanotorrent_swarm_event_type_t;
+	NANOTORRENT_SWARM_JOINED
+} nanotorrent_swarm_state_t;
+
 process_event_t nanotorrent_swarm_event;
 
 #define nanotorrent_swarm_is_event(ev) \
 	((ev) == nanotorrent_swarm_event)
 
-#define nanotorrent_swarm_event_type(data) \
-	(*((nanotorrent_swarm_event_type_t *) (data)))
-
 void nanotorrent_swarm_start();
 void nanotorrent_swarm_stop();
-bool nanotorrent_swarm_is_ready();
+
+nanotorrent_swarm_state_t nanotorrent_swarm_state();
+bool nanotorrent_swarm_can_join();
+bool nanotorrent_swarm_is_joined();
+
+size_t nanotorrent_swarm_peers(nanotorrent_peer_info_t *peers, size_t max_peers);
 
 void nanotorrent_swarm_join();
 void nanotorrent_swarm_leave();
 void nanotorrent_swarm_force_leave();
 void nanotorrent_swarm_refresh();
 void nanotorrent_swarm_complete();
-bool nanotorrent_swarm_is_joined();
 
 #endif /* NANOTORRENT_SWARM_H_ */
