@@ -158,24 +158,35 @@ nanotorrent_peer_conn_t *nanotorrent_peer_accept(
 	return nanotorrent_peer_connect_with(peer, &peers_in);
 }
 
+void nanotorrent_peer_force_disconnect_conn(nanotorrent_peer_conn_t *conn) {
+	nanotorrent_peer_remove(conn);
+	nanotorrent_peer_free(conn);
+}
+
+void nanotorrent_peer_disconnect_conn(nanotorrent_peer_conn_t *conn) {
+	// Disconnect locally
+	nanotorrent_peer_force_disconnect_conn(conn);
+	// Send CLOSE message
+	nanotorrent_peer_send_close(&conn->peer_info);
+}
+
 bool nanotorrent_peer_force_disconnect(const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_conn_t *conn;
 	conn = nanotorrent_peer_find(peer);
 	if (conn == NULL) {
 		return false;
 	}
-	// Remove peer connection
-	nanotorrent_peer_remove(conn);
-	nanotorrent_peer_free(conn);
+	nanotorrent_peer_force_disconnect_conn(conn);
 	return true;
 }
 
 bool nanotorrent_peer_disconnect(const nanotorrent_peer_info_t *peer) {
-	if (!nanotorrent_peer_force_disconnect(peer)) {
+	nanotorrent_peer_conn_t *conn;
+	conn = nanotorrent_peer_find(peer);
+	if (conn == NULL) {
 		return false;
 	}
-	// Send CLOSE message
-	nanotorrent_peer_send_close(peer);
+	nanotorrent_peer_disconnect_conn(conn);
 	return true;
 }
 
