@@ -26,7 +26,7 @@ MEMB(peers_out, nanotorrent_peer_conn_t, NANOTORRENT_MAX_OUT_PEERS);
 /**
  * Bitset of pending pieces
  */
-uint32_t pending_pieces;
+static uint32_t pending_pieces;
 
 /**
  * UDP socket with peers
