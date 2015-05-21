@@ -12,6 +12,46 @@
 #include "state.h"
 
 /**
+ * Peer connection
+ */
+typedef struct nanotorrent_peer_conn nanotorrent_peer_conn_t;
+
+struct nanotorrent_peer_conn {
+	/**
+	 * Next connection in list
+	 */
+	nanotorrent_peer_conn_t *next;
+	/**
+	 * Peer info
+	 */
+	nanotorrent_peer_info_t peer_info;
+	/**
+	 * Bit vector of completed pieces in peer's file
+	 */
+	uint32_t have;
+	/**
+	 * Heartbeat timer
+	 */
+	struct etimer heartbeat;
+	/**
+	 * Whether currently requesting a piece from this peer
+	 */
+	bool has_request;
+	/**
+	 * Piece index of requested piece
+	 */
+	uint8_t request_index;
+	/**
+	 * Offset in requested piece
+	 */
+	uint16_t request_offset;
+	/**
+	 * Request retry
+	 */
+	nanotorrent_retry_t request_retry;
+};
+
+/**
  * Peer message types
  */
 enum nanotracker_peer_message_type {

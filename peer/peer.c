@@ -11,7 +11,22 @@
 #include "pack.h"
 #include "bitset.h"
 
+#include "lib/list.h"
+#include "lib/memb.h"
+
 #define state (nanotorrent_state)
+
+/**
+ * Peer connections
+ */
+LIST(peers);
+MEMB(peers_in, nanotorrent_peer_conn_t, NANOTORRENT_MAX_IN_PEERS);
+MEMB(peers_out, nanotorrent_peer_conn_t, NANOTORRENT_MAX_OUT_PEERS);
+
+/**
+ * Bitset of pending pieces
+ */
+uint32_t pending_pieces;
 
 /**
  * UDP socket with peers
@@ -32,14 +47,9 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 
 void nanotorrent_peer_init() {
 	// Initialize peers
-	nanotorrent_peer_conn_t *conn;
-	ARRAY_FOR(conn, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
-	{
-		conn->is_valid = false;
-		nanotorrent_retry_init(&conn->request_retry,
-				(NANOTORRENT_PEER_RETRY_TIMEOUT),
-				nanotorrent_peer_handle_request_retry);
-	}
+	list_init(peers);
+	memb_init(&peers_in);
+	memb_init(&peers_out);
 	// Register peer socket
 	udp_socket_close(&peer_socket);
 	udp_socket_register(&peer_socket, NULL, nanotorrent_peer_handle_message);
@@ -53,23 +63,14 @@ void nanotorrent_peer_shutdown() {
 }
 
 uint8_t nanotorrent_peer_count() {
-	uint8_t count = 0;
-	nanotorrent_peer_conn_t *conn;
-	ARRAY_FOR(conn, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
-	{
-		if (conn->is_valid) {
-			count++;
-		}
-	}
-	return count;
+	return list_length(peers);
 }
 
 nanotorrent_peer_conn_t *nanotorrent_peer_find(
 		const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_conn_t *conn;
-	ARRAY_FOR(conn, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
-	{
-		if (conn->is_valid && nanotorrent_peer_info_cmp(peer, &conn->peer_info)) {
+	for (conn = list_head(peers); conn != NULL; conn = list_item_next(conn)) {
+		if (nanotorrent_peer_info_cmp(peer, &conn->peer_info)) {
 			return conn;
 		}
 	}
@@ -77,41 +78,41 @@ nanotorrent_peer_conn_t *nanotorrent_peer_find(
 }
 
 nanotorrent_peer_conn_t *nanotorrent_peer_allocate_out() {
-	nanotorrent_peer_conn_t *conn;
-	// Find first available connection slot
-	ARRAY_FOR(conn, state.exchange.peers.out, NANOTORRENT_MAX_OUT_PEERS)
-	{
-		if (!conn->is_valid) {
-			return conn;
-		}
-	}
-	return NULL;
+	return memb_alloc(&peers_out);
 }
 
 nanotorrent_peer_conn_t *nanotorrent_peer_allocate_in() {
-	nanotorrent_peer_conn_t *conn;
-	// Find first available connection conn
-	ARRAY_FOR(conn, state.exchange.peers.in, NANOTORRENT_MAX_IN_PEERS)
-	{
-		if (!conn->is_valid) {
-			return conn;
-		}
+	return memb_alloc(&peers_in);
+}
+
+void nanotorrent_peer_free(nanotorrent_peer_conn_t *conn) {
+	if (memb_inmemb(&peers_in, conn)) {
+		memb_free(&peers_in, conn);
+	} else if (memb_inmemb(&peers_out, conn)) {
+		memb_free(&peers_out, conn);
 	}
-	return NULL;
 }
 
 void nanotorrent_peer_add(nanotorrent_peer_conn_t *conn) {
-	conn->is_valid = true;
+	// Initialize
 	conn->have = 0;
+	conn->has_request = false;
+	nanotorrent_retry_init(&conn->request_retry,
+			(NANOTORRENT_PEER_RETRY_TIMEOUT),
+			nanotorrent_peer_handle_request_retry);
 	// Start heartbeat
 	etimer_set(&conn->heartbeat, NANOTORRENT_PEER_HEARTBEAT_TIMEOUT);
+	// Add to peers list
+	list_push(peers, conn);
 }
 
 void nanotorrent_peer_remove(nanotorrent_peer_conn_t *conn) {
-	conn->is_valid = false;
+	// Remove from peers list
+	list_remove(peers, conn);
 	// Remove from piece counts
 	nanotorrent_select_update_have(conn->have, 0);
 	conn->have = 0;
+	conn->has_request = false;
 	// Stop heartbeat
 	etimer_stop(&conn->heartbeat);
 }
@@ -175,6 +176,7 @@ bool nanotorrent_peer_force_disconnect(const nanotorrent_peer_info_t *peer) {
 	}
 	// Remove peer connection
 	nanotorrent_peer_remove(conn);
+	nanotorrent_peer_free(conn);
 	return true;
 }
 
@@ -189,15 +191,16 @@ bool nanotorrent_peer_disconnect(const nanotorrent_peer_info_t *peer) {
 
 uint32_t nanotorrent_peer_interesting(nanotorrent_peer_conn_t *conn) {
 	uint32_t interesting = conn->have;
-	interesting = nanotorrent_bitset_diff(interesting, nanotorrent_piece_have());
 	interesting = nanotorrent_bitset_diff(interesting,
-			state.exchange.pending_pieces);
+			nanotorrent_piece_have());
+	interesting = nanotorrent_bitset_diff(interesting, pending_pieces);
 	return interesting;
 }
 
 uint32_t nanotorrent_peer_interesting_endgame(nanotorrent_peer_conn_t *conn) {
 	uint32_t interesting = conn->have;
-	interesting = nanotorrent_bitset_diff(interesting, nanotorrent_piece_have());
+	interesting = nanotorrent_bitset_diff(interesting,
+			nanotorrent_piece_have());
 	return interesting;
 }
 
@@ -211,15 +214,13 @@ void nanotorrent_peer_update_have(nanotorrent_peer_conn_t *conn, uint32_t have) 
 }
 
 bool nanotorrent_peer_has_request(uint8_t piece_index) {
-	return nanotorrent_bitset_get(state.exchange.pending_pieces, piece_index);
+	return nanotorrent_bitset_get(pending_pieces, piece_index);
 }
 
 nanotorrent_peer_conn_t *nanotorrent_peer_find_request(uint8_t piece_index) {
 	nanotorrent_peer_conn_t *conn;
-	ARRAY_FOR(conn, state.exchange.peers.all, NANOTORRENT_MAX_EXCHANGE_PEERS)
-	{
-		if (conn->is_valid && conn->has_request
-				&& conn->request_index == piece_index) {
+	for (conn = list_head(peers); conn != NULL; conn = list_item_next(conn)) {
+		if (conn->has_request && conn->request_index == piece_index) {
 			return conn;
 		}
 	}
@@ -228,7 +229,7 @@ nanotorrent_peer_conn_t *nanotorrent_peer_find_request(uint8_t piece_index) {
 
 void nanotorrent_peer_request_init(nanotorrent_peer_conn_t *conn) {
 	conn->has_request = true;
-	nanotorrent_bitset_set(state.exchange.pending_pieces, conn->request_index);
+	nanotorrent_bitset_set(pending_pieces, conn->request_index);
 }
 
 void nanotorrent_peer_request_start(nanotorrent_peer_conn_t *conn) {
@@ -239,8 +240,7 @@ void nanotorrent_peer_request_start(nanotorrent_peer_conn_t *conn) {
 
 void nanotorrent_peer_request_stop(nanotorrent_peer_conn_t *conn) {
 	conn->has_request = false;
-	nanotorrent_bitset_clear(state.exchange.pending_pieces,
-			conn->request_index);
+	nanotorrent_bitset_clear(pending_pieces, conn->request_index);
 	nanotorrent_retry_stop(&conn->request_retry);
 }
 
@@ -340,7 +340,7 @@ void nanotorrent_peer_data_received(const nanotorrent_peer_info_t *peer,
 void nanotorrent_peer_handle_request_retry(nanotorrent_retry_event_t event,
 		void *data) {
 	nanotorrent_peer_conn_t *conn = data;
-	if (!conn->is_valid || !conn->has_request)
+	if (!conn->has_request)
 		return;
 
 	switch (event) {
