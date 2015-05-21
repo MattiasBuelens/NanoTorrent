@@ -117,16 +117,16 @@ void nanotorrent_peer_remove(nanotorrent_peer_conn_t *conn) {
 	etimer_stop(&conn->heartbeat);
 }
 
-nanotorrent_peer_conn_t *nanotorrent_peer_connect(
-		const nanotorrent_peer_info_t *peer) {
+nanotorrent_peer_conn_t *nanotorrent_peer_connect_with(
+		const nanotorrent_peer_info_t *peer, struct memb *pool) {
 	nanotorrent_peer_conn_t *conn;
 	conn = nanotorrent_peer_find(peer);
 	if (conn != NULL) {
 		// Already connected with this peer
 		return conn;
 	}
-	// Find available outgoing slot
-	conn = nanotorrent_peer_allocate_out();
+	// Find available slot
+	conn = memb_alloc(pool);
 	if (conn == NULL) {
 		// No more slots available
 		return NULL;
@@ -135,6 +135,11 @@ nanotorrent_peer_conn_t *nanotorrent_peer_connect(
 	conn->peer_info = *peer;
 	nanotorrent_peer_add(conn);
 	return conn;
+}
+
+nanotorrent_peer_conn_t *nanotorrent_peer_connect(
+		const nanotorrent_peer_info_t *peer) {
+	return nanotorrent_peer_connect_with(peer, &peers_out);
 }
 
 void nanotorrent_peer_connect_all(const nanotorrent_peer_info_t *peers,
@@ -150,22 +155,7 @@ void nanotorrent_peer_connect_all(const nanotorrent_peer_info_t *peers,
 
 nanotorrent_peer_conn_t *nanotorrent_peer_accept(
 		const nanotorrent_peer_info_t *peer) {
-	nanotorrent_peer_conn_t *conn;
-	conn = nanotorrent_peer_find(peer);
-	if (conn != NULL) {
-		// Already connected with this peer
-		return conn;
-	}
-	// Find available incoming slot
-	conn = nanotorrent_peer_allocate_in();
-	if (conn == NULL) {
-		// No more slots available
-		return NULL;
-	}
-	// Add peer connection
-	conn->peer_info = *peer;
-	nanotorrent_peer_add(conn);
-	return conn;
+	return nanotorrent_peer_connect_with(peer, &peers_in);
 }
 
 bool nanotorrent_peer_force_disconnect(const nanotorrent_peer_info_t *peer) {
