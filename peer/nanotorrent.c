@@ -11,6 +11,7 @@
 #include "swarm.h"
 #include "peer.h"
 #include "piece.h"
+#include "piece-select.h"
 
 nanotorrent_torrent_state_t nanotorrent_state;
 #define state (nanotorrent_state)
@@ -37,6 +38,7 @@ void nanotorrent_stop() {
 void nanotorrent_init() {
 	nanotorrent_piece_init();
 	nanotorrent_peer_init();
+	nanotorrent_select_init();
 	nanotorrent_swarm_start();
 }
 

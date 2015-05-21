@@ -11,6 +11,7 @@
 #include "common.h"
 #include "peer.h"
 
+void nanotorrent_select_init();
 bool nanotorrent_select_is_endgame();
 bool nanotorrent_select_next(nanotorrent_peer_conn_t *conn,
 		uint8_t *piece_index);

@@ -15,7 +15,11 @@
 #define state (nanotorrent_state)
 
 // Amount of occurrences of all pieces at connected peers
-uint8_t piece_counts[NANOTORRENT_MAX_PIECES] = { 0 };
+uint8_t piece_counts[NANOTORRENT_MAX_PIECES];
+
+void nanotorrent_select_init() {
+	memset(piece_counts, 0, sizeof(piece_counts));
+}
 
 void nanotorrent_select_update_have(uint32_t old_have, uint32_t new_have) {
 	if (old_have == new_have) {
