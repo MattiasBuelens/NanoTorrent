@@ -274,7 +274,7 @@ bool nanotorrent_peer_should_receive_data(const nanotorrent_peer_info_t *peer,
 		conn = nanotorrent_peer_find_request(piece_index);
 		// Data in range of current request?
 		if (data_offset <= conn->request_offset
-				&& conn->request_offset <= data_offset + data_length) {
+				&& conn->request_offset < data_offset + data_length) {
 			// Data valid for current request
 			return true;
 		}
