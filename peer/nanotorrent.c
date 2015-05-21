@@ -39,14 +39,13 @@ void nanotorrent_stop() {
 
 void nanotorrent_init() {
 	nanotorrent_piece_init();
-	nanotorrent_peer_init();
 	nanotorrent_select_init();
 	nanotorrent_swarm_start();
 }
 
 void nanotorrent_shutdown() {
 	nanotorrent_swarm_stop();
-	nanotorrent_peer_shutdown();
+	nanotorrent_peer_stop();
 	nanotorrent_piece_shutdown();
 }
 
@@ -118,6 +117,7 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		}
 		PRINTF("Joined the swarm\n");
 
+		nanotorrent_peer_start();
 		// TODO Connect with peers
 
 		// Exchange pieces

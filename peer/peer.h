@@ -118,8 +118,11 @@ typedef struct nanotorrent_peer_data {
 	uint16_t data_start;
 } nanotorrent_peer_data_t;
 
-void nanotorrent_peer_init();
-void nanotorrent_peer_shutdown();
+PROCESS_NAME(nanotorrent_peer_process);
+process_event_t nanotorrent_peer_event;
+
+void nanotorrent_peer_start();
+void nanotorrent_peer_stop();
 
 uint8_t nanotorrent_peer_count();
 nanotorrent_peer_conn_t *nanotorrent_peer_connect(

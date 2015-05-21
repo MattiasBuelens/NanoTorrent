@@ -45,6 +45,14 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 		const uip_ipaddr_t *dest_addr, uint16_t dest_port, const uint8_t *data,
 		uint16_t datalen);
 
+void nanotorrent_peer_start() {
+	process_start(&nanotorrent_peer_process, NULL);
+}
+
+void nanotorrent_peer_stop() {
+	process_exit(&nanotorrent_peer_process);
+}
+
 void nanotorrent_peer_init() {
 	// Initialize peers
 	list_init(peers);
@@ -94,6 +102,9 @@ void nanotorrent_peer_free(nanotorrent_peer_conn_t *conn) {
 }
 
 void nanotorrent_peer_add(nanotorrent_peer_conn_t *conn) {
+	// Ensure timers are bound to peer process
+	PROCESS_CONTEXT_BEGIN(&nanotorrent_peer_process);
+
 	// Initialize
 	conn->have = 0;
 	conn->has_request = false;
@@ -104,6 +115,8 @@ void nanotorrent_peer_add(nanotorrent_peer_conn_t *conn) {
 	etimer_set(&conn->heartbeat, NANOTORRENT_PEER_HEARTBEAT_TIMEOUT);
 	// Add to peers list
 	list_push(peers, conn);
+
+	PROCESS_CONTEXT_END(&nanotorrent_peer_process);
 }
 
 void nanotorrent_peer_remove(nanotorrent_peer_conn_t *conn) {
@@ -556,5 +569,35 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 	default:
 		WARN("Ignoring peer message with unknown type %u", header.type);
 	}
+}
 
+PROCESS(nanotorrent_peer_process, "NanoTorrent peer process");
+PROCESS_THREAD(nanotorrent_peer_process, ev, data) {
+	PROCESS_EXITHANDLER(nanotorrent_peer_shutdown())
+	PROCESS_BEGIN()
+
+		// Initialize
+		nanotorrent_peer_event = process_alloc_event();
+		nanotorrent_peer_init();
+
+		while (true) {
+			nanotorrent_peer_conn_t *conn, *next_conn;
+			for (conn = list_head(peers); conn != NULL; conn = next_conn) {
+				// Get next peer before messing with peers list
+				next_conn = list_item_next(conn);
+				// Handle dropped heartbeat
+				if (etimer_expired(&conn->heartbeat)) {
+					nanotorrent_peer_disconnect_conn(conn);
+				}
+				// Handle request retries
+				if (conn->has_request) {
+					nanotorrent_retry_process(&conn->request_retry);
+				}
+			}
+
+			// Wait for timer event
+			PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_TIMER);
+		}
+
+	PROCESS_END()
 }
