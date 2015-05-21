@@ -13,6 +13,15 @@
 
 #define NANOTORRENT_PIECE_BUFFER_SIZE 256
 
+/**
+ * File descriptor for own file
+ */
+static int own_file;
+/**
+ * Bit vector of completed pieces in own file
+ */
+static uint32_t own_have;
+
 uint16_t nanotorrent_piece_offset(const nanotorrent_torrent_info_t *info,
 		const uint8_t piece_index) {
 	if (piece_index < 0 || piece_index >= info->num_pieces) {
@@ -49,27 +58,31 @@ void nanotorrent_piece_init() {
 		ERROR("Could not open file");
 		return;
 	}
-	state.piece.file = file;
+	own_file = file;
 	// Verify file contents
 	sha1_context_t context;
-	state.piece.have = nanotorrent_piece_verify_all(&context);
+	own_have = nanotorrent_piece_verify_all(&context);
 }
 
 void nanotorrent_piece_shutdown() {
 	// Close file
-	if (state.piece.file >= 0) {
-		cfs_close(state.piece.file);
+	if (own_file >= 0) {
+		cfs_close(own_file);
 	}
-	state.piece.file = -1;
+	own_file = -1;
 }
 
 uint32_t nanotorrent_piece_bitset_all() {
 	return (1 << state.desc.info.num_pieces) - 1;
 }
 
+uint32_t nanotorrent_piece_have() {
+	return own_have;
+}
+
 bool nanotorrent_piece_is_seed() {
 	uint32_t all = nanotorrent_piece_bitset_all();
-	return nanotorrent_bitset_contains(all, state.piece.have);
+	return nanotorrent_bitset_contains(all, own_have);
 }
 
 bool nanotorrent_piece_is_complete(const uint8_t piece_index) {
@@ -77,7 +90,7 @@ bool nanotorrent_piece_is_complete(const uint8_t piece_index) {
 		ERROR("Invalid piece index: %u", piece_index);
 		return false;
 	}
-	return nanotorrent_bitset_get(state.piece.have, piece_index);
+	return nanotorrent_bitset_get(own_have, piece_index);
 }
 
 void nanotorrent_piece_set_complete(const uint8_t piece_index, bool is_complete) {
@@ -86,14 +99,14 @@ void nanotorrent_piece_set_complete(const uint8_t piece_index, bool is_complete)
 		return;
 	}
 	if (is_complete) {
-		nanotorrent_bitset_set(state.piece.have, piece_index);
+		nanotorrent_bitset_set(own_have, piece_index);
 	} else {
-		nanotorrent_bitset_clear(state.piece.have, piece_index);
+		nanotorrent_bitset_clear(own_have, piece_index);
 	}
 }
 
 uint8_t nanotorrent_piece_count_complete() {
-	return nanotorrent_bitset_count(state.piece.have);
+	return nanotorrent_bitset_count(own_have);
 }
 
 uint16_t nanotorrent_piece_read(const uint8_t piece_index,
@@ -113,14 +126,13 @@ uint16_t nanotorrent_piece_read(const uint8_t piece_index,
 	uint16_t piece_offset = nanotorrent_piece_offset(&state.desc.info,
 			piece_index);
 	uint16_t offset = piece_offset + data_offset;
-	if (cfs_seek(state.piece.file, offset, CFS_SEEK_SET) < 0) {
+	if (cfs_seek(own_file, offset, CFS_SEEK_SET) < 0) {
 		ERROR("Could not seek to piece %u at offset %u", piece_index, offset);
 		return -1;
 	}
 	// Read piece data into buffer
 	uint16_t data_length = piece_size - data_offset;
-	uint16_t read = cfs_read(state.piece.file, buffer,
-			MIN(buffer_length, data_length));
+	uint16_t read = cfs_read(own_file, buffer, MIN(buffer_length, data_length));
 	if (read < 0) {
 		ERROR("Could not read piece %u at offset %u", piece_index, offset);
 		return -1;
@@ -145,13 +157,13 @@ uint16_t nanotorrent_piece_write(const uint8_t piece_index,
 	uint16_t piece_offset = nanotorrent_piece_offset(&state.desc.info,
 			piece_index);
 	uint16_t offset = piece_offset + data_offset;
-	if (cfs_seek(state.piece.file, offset, CFS_SEEK_SET) < 0) {
+	if (cfs_seek(own_file, offset, CFS_SEEK_SET) < 0) {
 		ERROR("Could not seek to piece %u at offset %u", piece_index, offset);
 		return -1;
 	}
 	// Write buffer into piece data
 	uint16_t data_length = piece_size - data_offset;
-	uint16_t written = cfs_write(state.piece.file, buffer,
+	uint16_t written = cfs_write(own_file, buffer,
 			MIN(buffer_length, data_length));
 	if (written < 0) {
 		ERROR("Could not write piece %u at offset %u", piece_index, offset);
@@ -196,7 +208,7 @@ bool nanotorrent_piece_verify(sha1_context_t *context,
 	}
 	uint16_t size = nanotorrent_piece_size(&state.desc.info, piece_index);
 	// Seek to start of piece
-	int file = state.piece.file;
+	int file = own_file;
 	if (cfs_seek(file, offset, CFS_SEEK_SET) < 0) {
 		return false;
 	}

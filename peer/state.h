@@ -92,20 +92,6 @@ typedef struct nanotorrent_exchange_state {
 } nanotorrent_exchange_state_t;
 
 /**
- * Piece state
- */
-typedef struct nanotorrent_piece_state {
-	/**
-	 * File descriptor
-	 */
-	int file;
-	/**
-	 * Bit vector of completed pieces in own file
-	 */
-	uint32_t have;
-} nanotorrent_piece_state_t;
-
-/**
  * Torrent state
  */
 typedef struct nanotorrent_torrent_state {
@@ -125,10 +111,6 @@ typedef struct nanotorrent_torrent_state {
 	 * Exchange state
 	 */
 	nanotorrent_exchange_state_t exchange;
-	/**
-	 * Piece state
-	 */
-	nanotorrent_piece_state_t piece;
 } nanotorrent_torrent_state_t;
 
 /**
