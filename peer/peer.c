@@ -518,7 +518,7 @@ void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
 
 #if NANOTORRENT_LOCAL
 	if (nanotorrent_peer_is_local(peer)) {
-		nanotorrent_peer_send_local_multicast(reply_buffer, reply_length, peer);
+		nanotorrent_peer_send_local_multicast(reply_buffer, reply_length);
 	} else {
 		nanotorrent_peer_send_message(reply_buffer, reply_length, peer);
 	}
