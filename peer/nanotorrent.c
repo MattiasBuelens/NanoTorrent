@@ -43,6 +43,7 @@ void nanotorrent_stop() {
 void nanotorrent_init() {
 	nanotorrent_piece_init();
 	nanotorrent_select_init();
+	nanotorrent_peer_start();
 	nanotorrent_swarm_start();
 }
 
@@ -104,6 +105,7 @@ bool nanotorrent_keep_going() {
 
 #define nanotorrent_check_event(ev) \
 	(nanotorrent_swarm_is_event(ev) \
+			|| nanotorrent_peer_is_event(ev) \
 			|| (seed_timer_set && etimer_expired(&seed_timer)))
 
 PROCESS(nanotorrent_process, "NanoTorrent process");
@@ -133,8 +135,6 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		}
 		PRINTF("Joined the swarm\n");
 
-		// Start peer exchange
-		nanotorrent_peer_start();
 		// Connect with peers from swarm
 		nanotorrent_connect_swarm();
 
@@ -146,7 +146,11 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 				PROCESS_EXIT();
 			}
 
-			// TODO Handle piece completion
+			// Handle peer event
+			if (nanotorrent_peer_is_event(ev)) {
+				// Try to connect with more peers
+				nanotorrent_connect_swarm();
+			}
 
 			PROCESS_WAIT_EVENT_UNTIL(nanotorrent_check_event(ev));
 		}

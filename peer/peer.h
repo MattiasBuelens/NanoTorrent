@@ -121,6 +121,9 @@ typedef struct nanotorrent_peer_data {
 PROCESS_NAME(nanotorrent_peer_process);
 extern process_event_t nanotorrent_peer_event;
 
+#define nanotorrent_peer_is_event(ev) \
+	((ev) == nanotorrent_peer_event)
+
 void nanotorrent_peer_start();
 void nanotorrent_peer_stop();
 

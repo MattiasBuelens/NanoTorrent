@@ -81,6 +81,9 @@ void nanotorrent_peer_shutdown() {
 	etimer_stop(&heartbeat);
 }
 
+#define nanotorrent_peer_post_event() \
+	process_post_synch(&nanotorrent_process, nanotorrent_peer_event, NULL)
+
 uint8_t nanotorrent_peer_count() {
 	return list_length(peers);
 }
@@ -114,8 +117,7 @@ void nanotorrent_peer_free(nanotorrent_peer_conn_t *conn) {
 
 void nanotorrent_peer_add(nanotorrent_peer_conn_t *conn) {
 	// Ensure timers are bound to peer process
-	PROCESS_CONTEXT_BEGIN(&nanotorrent_peer_process)
-	;
+	PROCESS_CONTEXT_BEGIN(&nanotorrent_peer_process);
 
 	// Initialize
 	conn->have = 0;
@@ -159,7 +161,8 @@ nanotorrent_peer_conn_t *nanotorrent_peer_connect_with(
 	// Add peer connection
 	conn->peer_info = *peer;
 	nanotorrent_peer_add(conn);
-	// TODO Notify connect
+	// Notify connect
+	nanotorrent_peer_post_event();
 	return conn;
 }
 
@@ -174,9 +177,11 @@ nanotorrent_peer_conn_t *nanotorrent_peer_accept(
 }
 
 void nanotorrent_peer_force_disconnect_conn(nanotorrent_peer_conn_t *conn) {
+	// Remove connection
 	nanotorrent_peer_remove(conn);
 	nanotorrent_peer_free(conn);
-	// TODO Notify disconnect
+	// Notify disconnect
+	nanotorrent_peer_post_event();
 }
 
 void nanotorrent_peer_disconnect_conn(nanotorrent_peer_conn_t *conn) {
@@ -348,6 +353,8 @@ void nanotorrent_peer_data_received(const nanotorrent_peer_info_t *peer,
 		if (is_complete) {
 			// Piece completed
 			NOTE("Piece %u completed", piece_index);
+			// Notify piece complete
+			nanotorrent_peer_post_event();
 		} else {
 			// Piece corrupted
 			WARN("Piece %u corrupted", piece_index);
