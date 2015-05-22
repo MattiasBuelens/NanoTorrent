@@ -112,7 +112,8 @@ void nanotorrent_peer_free(nanotorrent_peer_conn_t *conn) {
 
 void nanotorrent_peer_add(nanotorrent_peer_conn_t *conn) {
 	// Ensure timers are bound to peer process
-	PROCESS_CONTEXT_BEGIN(&nanotorrent_peer_process);
+	PROCESS_CONTEXT_BEGIN(&nanotorrent_peer_process)
+	;
 
 	// Initialize
 	conn->have = 0;
@@ -163,17 +164,6 @@ nanotorrent_peer_conn_t *nanotorrent_peer_connect_with(
 nanotorrent_peer_conn_t *nanotorrent_peer_connect(
 		const nanotorrent_peer_info_t *peer) {
 	return nanotorrent_peer_connect_with(peer, &peers_out);
-}
-
-void nanotorrent_peer_connect_all(const nanotorrent_peer_info_t *peers,
-		uint8_t num_peers) {
-	int i;
-	for (i = 0; i < num_peers; i++) {
-		if (nanotorrent_peer_connect(&peers[i]) == NULL) {
-			// No more slots available
-			break;
-		}
-	}
 }
 
 nanotorrent_peer_conn_t *nanotorrent_peer_accept(
@@ -643,7 +633,7 @@ PROCESS_THREAD(nanotorrent_peer_process, ev, data) {
 #if NANOTORRENT_LOCAL
 						&& !nanotorrent_peer_is_local(&conn->peer_info)
 #endif
-						) {
+								) {
 					nanotorrent_peer_send_have(&conn->peer_info);
 				}
 			}

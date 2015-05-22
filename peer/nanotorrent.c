@@ -16,6 +16,9 @@
 nanotorrent_torrent_state_t nanotorrent_state;
 #define state (nanotorrent_state)
 
+/**
+ * Seed timer
+ */
 static struct etimer seed_timer;
 static bool seed_timer_set;
 
@@ -49,10 +52,25 @@ void nanotorrent_shutdown() {
 	nanotorrent_piece_shutdown();
 }
 
+void nanotorrent_connect_swarm() {
+	nanotorrent_peer_info_t *peer;
+	nanotorrent_peer_conn_t *conn;
+	while ((peer = nanotorrent_swarm_peek_peer()) != NULL) {
+		conn = nanotorrent_peer_connect(peer);
+		if (conn == NULL) {
+			break;
+		}
+		nanotorrent_swarm_pop_peer();
+	}
+}
+
 bool nanotorrent_handle_swarm_event() {
 	switch (nanotorrent_swarm_state()) {
 	case NANOTORRENT_SWARM_JOINED:
-		// TODO Connect with peers
+		// Swarm was refreshed
+		// Try connecting with new peers
+		NOTE("Refreshing swarm");
+		nanotorrent_connect_swarm();
 		return true;
 	case NANOTORRENT_SWARM_LEFT:
 		ERROR("Lost connection with swarm");
@@ -115,8 +133,10 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		}
 		PRINTF("Joined the swarm\n");
 
+		// Start peer exchange
 		nanotorrent_peer_start();
-		// TODO Connect with peers
+		// Connect with peers from swarm
+		nanotorrent_connect_swarm();
 
 		// Exchange pieces
 		while (nanotorrent_keep_going()) {

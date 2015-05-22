@@ -127,8 +127,6 @@ void nanotorrent_peer_stop();
 uint8_t nanotorrent_peer_count();
 nanotorrent_peer_conn_t *nanotorrent_peer_connect(
 		const nanotorrent_peer_info_t *peer);
-void nanotorrent_peer_connect_all(const nanotorrent_peer_info_t *peers,
-		uint8_t num_peers);
 nanotorrent_peer_conn_t *nanotorrent_peer_accept(
 		const nanotorrent_peer_info_t *peer);
 bool nanotorrent_peer_disconnect(const nanotorrent_peer_info_t *peer);
