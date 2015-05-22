@@ -10,6 +10,7 @@
 #include "piece-select.h"
 #include "pack.h"
 #include "bitset.h"
+#include "nanotorrent.h"
 
 #include "lib/list.h"
 #include "lib/memb.h"
