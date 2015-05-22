@@ -16,6 +16,8 @@
 
 #define state (nanotorrent_state)
 
+process_event_t nanotorrent_peer_event;
+
 /**
  * Peer connections
  */

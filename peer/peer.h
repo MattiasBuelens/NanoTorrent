@@ -119,7 +119,7 @@ typedef struct nanotorrent_peer_data {
 } nanotorrent_peer_data_t;
 
 PROCESS_NAME(nanotorrent_peer_process);
-process_event_t nanotorrent_peer_event;
+extern process_event_t nanotorrent_peer_event;
 
 void nanotorrent_peer_start();
 void nanotorrent_peer_stop();

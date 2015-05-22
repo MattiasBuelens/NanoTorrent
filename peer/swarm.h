@@ -94,7 +94,7 @@ typedef enum nanotorrent_swarm_state {
 } nanotorrent_swarm_state_t;
 
 PROCESS_NAME(nanotorrent_swarm_process);
-process_event_t nanotorrent_swarm_event;
+extern process_event_t nanotorrent_swarm_event;
 
 #define nanotorrent_swarm_is_event(ev) \
 	((ev) == nanotorrent_swarm_event)

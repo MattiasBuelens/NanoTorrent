@@ -15,6 +15,8 @@
 
 #define state (nanotorrent_state)
 
+process_event_t nanotorrent_swarm_event;
+
 /**
  * Swarm state
  */
