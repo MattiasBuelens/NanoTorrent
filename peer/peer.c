@@ -82,7 +82,7 @@ void nanotorrent_peer_shutdown() {
 }
 
 #define nanotorrent_peer_post_event() \
-	process_post_synch(&nanotorrent_process, nanotorrent_peer_event, NULL)
+	process_post(&nanotorrent_process, nanotorrent_peer_event, NULL)
 
 uint8_t nanotorrent_peer_count() {
 	return list_length(peers);

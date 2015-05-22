@@ -188,7 +188,7 @@ void nanotorrent_swarm_announce_retry(nanotorrent_retry_event_t event,
 }
 
 #define nanotorrent_swarm_post_event() \
-	process_post_synch(&nanotorrent_process, nanotorrent_swarm_event, NULL)
+	process_post(&nanotorrent_process, nanotorrent_swarm_event, NULL)
 
 void nanotorrent_swarm_join() {
 	if (!nanotorrent_swarm_can_join()) {
