@@ -63,12 +63,12 @@
 /**
  * Base timeout for retrying an announce request
  */
-#define NANOTORRENT_ANNOUNCE_RETRY_TIMEOUT (3 * CLOCK_SECOND)
+#define NANOTORRENT_ANNOUNCE_RETRY_TIMEOUT (3ul * CLOCK_SECOND)
 
 /**
  * Time between two announce refresh requests
  */
-#define NANOTORRENT_ANNOUNCE_REFRESH_PERIOD (60 * CLOCK_SECOND)
+#define NANOTORRENT_ANNOUNCE_REFRESH_PERIOD (60ul * CLOCK_SECOND)
 
 /**
  * Maximum number of retries for a peer data request
@@ -78,12 +78,12 @@
 /**
  * Base timeout for retrying a peer data request
  */
-#define NANOTORRENT_PEER_RETRY_TIMEOUT (5 * CLOCK_SECOND)
+#define NANOTORRENT_PEER_RETRY_TIMEOUT (5ul * CLOCK_SECOND)
 
 /**
  * Time between two heartbeats to connected peers
  */
-#define NANOTORRENT_PEER_HEARTBEAT_PERIOD (30 * CLOCK_SECOND)
+#define NANOTORRENT_PEER_HEARTBEAT_PERIOD (30ul * CLOCK_SECOND)
 
 /**
  * Timeout for a heartbeat to be expired
@@ -93,6 +93,6 @@
 /**
  * Time to keep seeding after completing torrent
  */
-#define NANOTORRENT_SEED_TIME (300 * CLOCK_SECOND)
+#define NANOTORRENT_SEED_TIME (300ul * CLOCK_SECOND)
 
 #endif /* NANOTORRENT_CONFIG_H_ */
