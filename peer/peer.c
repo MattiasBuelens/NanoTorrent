@@ -117,7 +117,8 @@ void nanotorrent_peer_free(nanotorrent_peer_conn_t *conn) {
 
 void nanotorrent_peer_add(nanotorrent_peer_conn_t *conn) {
 	// Ensure timers are bound to peer process
-	PROCESS_CONTEXT_BEGIN(&nanotorrent_peer_process);
+	PROCESS_CONTEXT_BEGIN(&nanotorrent_peer_process)
+	;
 
 	// Initialize
 	conn->have = 0;
@@ -161,8 +162,6 @@ nanotorrent_peer_conn_t *nanotorrent_peer_connect_with(
 	// Add peer connection
 	conn->peer_info = *peer;
 	nanotorrent_peer_add(conn);
-	// Notify connect
-	nanotorrent_peer_post_event();
 	return conn;
 }
 
