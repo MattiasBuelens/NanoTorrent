@@ -294,7 +294,7 @@ bool nanotorrent_peer_should_receive_data(const nanotorrent_peer_info_t *peer,
 	if (nanotorrent_piece_is_complete(piece_index)) {
 		return false;
 	}
-	// Already requesting this piece?
+	// Requesting this piece?
 	if (nanotorrent_peer_has_request(piece_index)) {
 		conn = nanotorrent_peer_find_request(piece_index);
 		// Data in range of current request?
@@ -303,7 +303,9 @@ bool nanotorrent_peer_should_receive_data(const nanotorrent_peer_info_t *peer,
 			// Data valid for current request
 			return true;
 		}
-	} else if (data_offset == 0) {
+	}
+#if NANOTORRENT_LOCAL
+	else if (data_offset == 0) {
 		// Peer started sending data for a new piece to some
 		// other peer, but we are not yet requesting that piece.
 		// Try to add a request so we can receive the data ourselves
@@ -325,6 +327,7 @@ bool nanotorrent_peer_should_receive_data(const nanotorrent_peer_info_t *peer,
 		nanotorrent_peer_request_init(conn);
 		return true;
 	}
+#endif /* NANOTORRENT_LOCAL */
 	return false;
 }
 
@@ -357,8 +360,6 @@ void nanotorrent_peer_data_received(const nanotorrent_peer_info_t *peer,
 			// Piece corrupted
 			WARN("Piece %u corrupted", piece_index);
 		}
-		// Request next piece
-		nanotorrent_peer_request_next(conn);
 	}
 }
 
@@ -421,6 +422,32 @@ void nanotorrent_peer_send_have(const nanotorrent_peer_info_t *peer) {
 
 	nanotorrent_peer_send_message(buffer, length, peer);
 }
+
+#if NANOTORRENT_LOCAL
+bool nanotorrent_peer_is_local(const nanotorrent_peer_info_t *peer) {
+	return uip_is_addr_linklocal(&peer->peer_ip);
+}
+
+void nanotorrent_peer_send_local_multicast(const uint8_t *buffer,
+		uint16_t buffer_length) {
+	uip_ip6addr_t dest_addr;
+	uip_create_linklocal_allnodes_mcast(&dest_addr);
+	udp_socket_sendto(&peer_socket, buffer, buffer_length, &dest_addr,
+			(NANOTORRENT_PEER_PORT));
+}
+
+void nanotorrent_peer_send_have_local_multicast() {
+	nanotorrent_peer_have_t message;
+	nanotorrent_peer_make_header(&message.header, NANOTORRENT_PEER_HAVE);
+
+	uint8_t buffer[sizeof(message)];
+	uint8_t *cur = buffer;
+	nanotorrent_pack_peer_have(&cur, &message);
+	uint16_t length = cur - buffer;
+
+	nanotorrent_peer_send_local_multicast(buffer, length);
+}
+#endif /* NANOTORRENT_LOCAL */
 
 void nanotorrent_peer_send_data_request(const nanotorrent_peer_info_t *peer,
 		uint8_t piece_index, uint16_t data_start) {
@@ -488,7 +515,16 @@ void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
 
 	// Send reply
 	uint16_t reply_length = reply_cur - reply_buffer;
+
+#if NANOTORRENT_LOCAL
+	if (nanotorrent_peer_is_local(peer)) {
+		nanotorrent_peer_send_local_multicast(reply_buffer, reply_length, peer);
+	} else {
+		nanotorrent_peer_send_message(reply_buffer, reply_length, peer);
+	}
+#else
 	nanotorrent_peer_send_message(reply_buffer, reply_length, peer);
+#endif
 }
 
 void nanotorrent_peer_handle_data_reply(const uint8_t *buffer,
@@ -567,11 +603,9 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 
 	switch (header.type) {
 	case NANOTORRENT_PEER_HAVE:
+	case NANOTORRENT_PEER_DATA_REPLY:
 		// Request next piece
 		nanotorrent_peer_request_next(conn);
-		break;
-	case NANOTORRENT_PEER_DATA_REPLY:
-		// Already handled
 		break;
 	case NANOTORRENT_PEER_DATA_REQUEST:
 		// Reply to data request
@@ -605,12 +639,20 @@ PROCESS_THREAD(nanotorrent_peer_process, ev, data) {
 					nanotorrent_retry_process(&conn->request_retry);
 				}
 				// Send own heartbeat
-				if (etimer_expired(&heartbeat)) {
+				if (etimer_expired(&heartbeat)
+#if NANOTORRENT_LOCAL
+						&& !nanotorrent_peer_is_local(&conn->peer_info)
+#endif
+						) {
 					nanotorrent_peer_send_have(&conn->peer_info);
 				}
 			}
 
 			if (etimer_expired(&heartbeat)) {
+#if NANOTORRENT_LOCAL
+				// Send local multicast heartbeat
+				nanotorrent_peer_send_have_local_multicast();
+#endif
 				// Schedule next heartbeat
 				etimer_reset(&heartbeat);
 			}

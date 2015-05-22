@@ -19,6 +19,15 @@
 #define NANOTORRENT_FILE_NAME_LENGTH 16
 
 /**
+ * Enable link-local optimizations
+ *
+ * - Peers discover and connect with local peers.
+ * - Peers send piece data to local peers as link-local multicasts,
+ *   so other local peers can benefit from the exchange.
+ */
+#define NANOTORRENT_LOCAL 1
+
+/**
  * Minimum completion before allowing end-game mode
  *
  * Completion is number of completed pieces
