@@ -97,8 +97,18 @@ bool nanotorrent_swarm_is_ready() {
 	return true;
 }
 
+void nanotorrent_swarm_set_ready() {
+	if (swarm_state == NANOTORRENT_SWARM_INIT) {
+		swarm_state = NANOTORRENT_SWARM_LEFT;
+	}
+}
+
 nanotorrent_swarm_state_t nanotorrent_swarm_state() {
 	return swarm_state;
+}
+
+bool nanotorrent_swarm_is_joining() {
+	return swarm_state == NANOTORRENT_SWARM_JOINING;
 }
 
 bool nanotorrent_swarm_is_joined() {
@@ -200,7 +210,8 @@ void nanotorrent_swarm_join() {
 	nanotorrent_swarm_announce_start(NANOTRACKER_ANNOUNCE_STARTED);
 	// Notify joining
 	swarm_state = NANOTORRENT_SWARM_JOINING;
-	nanotorrent_swarm_post_event();
+	nanotorrent_swarm_post_event()
+	;
 }
 
 void nanotorrent_swarm_leave_quiet() {
@@ -222,7 +233,8 @@ void nanotorrent_swarm_leave() {
 		// Announce leave
 		nanotorrent_swarm_announce_send(NANOTRACKER_ANNOUNCE_STOPPED);
 		// Notify left
-		nanotorrent_swarm_post_event();
+		nanotorrent_swarm_post_event()
+		;
 	}
 }
 
@@ -232,7 +244,8 @@ void nanotorrent_swarm_force_leave() {
 	if (was_joined) {
 		// Notify left
 		swarm_state = NANOTORRENT_SWARM_LEFT;
-		nanotorrent_swarm_post_event();
+		nanotorrent_swarm_post_event()
+		;
 	}
 }
 
@@ -260,14 +273,16 @@ void nanotorrent_swarm_handle_join() {
 	// Start periodic announce refresh
 	etimer_restart(&refresh);
 	// Notify joined
-	nanotorrent_swarm_post_event();
+	nanotorrent_swarm_post_event()
+	;
 }
 
 void nanotorrent_swarm_handle_refresh() {
 	// Restart periodic announce refresh
 	etimer_reset(&refresh);
 	// Notify refreshed
-	nanotorrent_swarm_post_event();
+	nanotorrent_swarm_post_event()
+	;
 }
 
 void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
@@ -328,6 +343,7 @@ PROCESS_THREAD(nanotorrent_swarm_process, ev, data) {
 			etimer_reset(&ready_poll);
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ready_poll));
 		}
+		nanotorrent_swarm_set_ready();
 
 		// Join the swarm
 		nanotorrent_swarm_join();

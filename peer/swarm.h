@@ -104,6 +104,7 @@ void nanotorrent_swarm_stop();
 
 nanotorrent_swarm_state_t nanotorrent_swarm_state();
 bool nanotorrent_swarm_can_join();
+bool nanotorrent_swarm_is_joining();
 bool nanotorrent_swarm_is_joined();
 
 nanotorrent_peer_info_t *nanotorrent_swarm_peek_peer();

@@ -118,8 +118,8 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 
 		// Wait until ready to join
 		PROCESS_WAIT_EVENT_UNTIL(nanotorrent_swarm_is_event(ev));
-		if (!nanotorrent_swarm_can_join()) {
-			ERROR("Failed to join swarm");
+		if (!nanotorrent_swarm_is_joining()) {
+			ERROR("Failed to start joining swarm");
 			PROCESS_EXIT();
 		}
 
