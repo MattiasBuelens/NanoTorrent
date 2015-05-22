@@ -33,6 +33,11 @@ static uint32_t pending_pieces;
  */
 static struct udp_socket peer_socket;
 
+/**
+ * Periodic heartbeat timer
+ */
+static struct etimer heartbeat;
+
 void nanotorrent_peer_send_close(const nanotorrent_peer_info_t *peer);
 void nanotorrent_peer_send_data_request(const nanotorrent_peer_info_t *peer,
 		uint8_t piece_index, uint16_t data_start);
@@ -58,6 +63,8 @@ void nanotorrent_peer_init() {
 	list_init(peers);
 	memb_init(&peers_in);
 	memb_init(&peers_out);
+	// Start heartbeat
+	etimer_set(&heartbeat, NANOTORRENT_PEER_HEARTBEAT_PERIOD);
 	// Register peer socket
 	udp_socket_close(&peer_socket);
 	udp_socket_register(&peer_socket, NULL, nanotorrent_peer_handle_message);
@@ -68,6 +75,8 @@ void nanotorrent_peer_init() {
 void nanotorrent_peer_shutdown() {
 	// Close peer socket
 	udp_socket_close(&peer_socket);
+	// Stop heartbeat
+	etimer_stop(&heartbeat);
 }
 
 uint8_t nanotorrent_peer_count() {
@@ -595,6 +604,15 @@ PROCESS_THREAD(nanotorrent_peer_process, ev, data) {
 				if (conn->has_request) {
 					nanotorrent_retry_process(&conn->request_retry);
 				}
+				// Send own heartbeat
+				if (etimer_expired(&heartbeat)) {
+					nanotorrent_peer_send_have(&conn->peer_info);
+				}
+			}
+
+			if (etimer_expired(&heartbeat)) {
+				// Schedule next heartbeat
+				etimer_reset(&heartbeat);
 			}
 
 			// Wait for timer event
