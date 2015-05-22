@@ -19,13 +19,14 @@
 #define QUOTE_(str) #str
 #define QUOTE(str) QUOTE_(str)
 
-typedef enum {
-	false, true
-} bool;
-
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
+
+enum {
+	false, true
+};
+typedef uint8_t bool;
 
 /**
  * Maximum UDP payload size
