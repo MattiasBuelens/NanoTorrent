@@ -54,31 +54,31 @@ struct nanotorrent_peer_conn {
 /**
  * Peer message types
  */
-enum nanotracker_peer_message_type {
+enum nanotorrent_peer_message_type {
 	/**
 	 * Peer closes the connection
 	 */
-	NANOTRACKER_PEER_CLOSE = 0,
+	NANOTORRENT_PEER_CLOSE = 0,
 	/**
 	 * Peer announces its 'have' state
 	 */
-	NANOTRACKER_PEER_HAVE,
+	NANOTORRENT_PEER_HAVE,
 	/**
 	 * Peer requests piece data
 	 */
-	NANOTRACKER_PEER_DATA_REQUEST,
+	NANOTORRENT_PEER_DATA_REQUEST,
 	/**
 	 * Peer sends piece data
 	 */
-	NANOTRACKER_PEER_DATA_REPLY
+	NANOTORRENT_PEER_DATA_REPLY
 };
-typedef uint8_t nanotracker_peer_message_type_t;
+typedef uint8_t nanotorrent_peer_message_type_t;
 
 typedef struct nanotorrent_peer_message_header {
 	/**
 	 * Peer message type
 	 */
-	nanotracker_peer_message_type_t type;
+	nanotorrent_peer_message_type_t type;
 	/**
 	 * SHA1 hash of torrent info
 	 */

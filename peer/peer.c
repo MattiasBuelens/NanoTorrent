@@ -391,7 +391,7 @@ CC_INLINE void nanotorrent_peer_make_header(
 
 void nanotorrent_peer_send_close(const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_close_t message;
-	nanotorrent_peer_make_header(&message.header, NANOTRACKER_PEER_CLOSE);
+	nanotorrent_peer_make_header(&message.header, NANOTORRENT_PEER_CLOSE);
 
 	uint8_t buffer[sizeof(message)];
 	uint8_t *cur = buffer;
@@ -403,7 +403,7 @@ void nanotorrent_peer_send_close(const nanotorrent_peer_info_t *peer) {
 
 void nanotorrent_peer_send_have(const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_have_t message;
-	nanotorrent_peer_make_header(&message.header, NANOTRACKER_PEER_CLOSE);
+	nanotorrent_peer_make_header(&message.header, NANOTORRENT_PEER_HAVE);
 
 	uint8_t buffer[sizeof(message)];
 	uint8_t *cur = buffer;
@@ -417,7 +417,7 @@ void nanotorrent_peer_send_data_request(const nanotorrent_peer_info_t *peer,
 		uint8_t piece_index, uint16_t data_start) {
 	nanotorrent_peer_data_t request;
 	nanotorrent_peer_make_header(&request.header,
-			NANOTRACKER_PEER_DATA_REQUEST);
+			NANOTORRENT_PEER_DATA_REQUEST);
 	request.piece_index = piece_index;
 	request.data_start = data_start;
 
@@ -433,7 +433,7 @@ uint16_t nanotorrent_peer_write_data_reply(uint8_t **cur, uint16_t buffer_size,
 		uint8_t piece_index, uint16_t data_start) {
 	// Write header
 	nanotorrent_peer_data_t reply;
-	nanotorrent_peer_make_header(&reply.header, NANOTRACKER_PEER_DATA_REPLY);
+	nanotorrent_peer_make_header(&reply.header, NANOTORRENT_PEER_DATA_REPLY);
 	reply.piece_index = piece_index;
 	reply.data_start = data_start;
 
@@ -533,11 +533,11 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 	nanotorrent_peer_info_t peer;
 	uip_ip6addr_copy(&peer.peer_ip, src_addr);
 
-	if (header.type == NANOTRACKER_PEER_CLOSE) {
+	if (header.type == NANOTORRENT_PEER_CLOSE) {
 		// Handle close immediately
 		nanotorrent_peer_force_disconnect(&peer);
 		return;
-	} else if (header.type == NANOTRACKER_PEER_DATA_REPLY) {
+	} else if (header.type == NANOTORRENT_PEER_DATA_REPLY) {
 		// Handle data reply first
 		// This can add opportunistic connections and requests
 		nanotorrent_peer_handle_data_reply(data, datalen, &peer);
@@ -557,14 +557,14 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 	nanotorrent_peer_update_have(conn, header.have);
 
 	switch (header.type) {
-	case NANOTRACKER_PEER_HAVE:
+	case NANOTORRENT_PEER_HAVE:
 		// Request next piece
 		nanotorrent_peer_request_next(conn);
 		break;
-	case NANOTRACKER_PEER_DATA_REPLY:
+	case NANOTORRENT_PEER_DATA_REPLY:
 		// Already handled
 		break;
-	case NANOTRACKER_PEER_DATA_REQUEST:
+	case NANOTORRENT_PEER_DATA_REQUEST:
 		// Reply to data request
 		nanotorrent_peer_handle_data_request(data, datalen, &peer);
 		break;
