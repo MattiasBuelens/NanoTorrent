@@ -5,23 +5,17 @@ import java.nio.ByteBuffer;
 public class AnnounceRequest {
 
 	private final InfoHash infoHash;
-	private final PeerInfo peerInfo;
 	private final int numWant;
 	private final AnnounceEvent event;
 
 	protected AnnounceRequest(Builder builder) {
 		this.infoHash = builder.infoHash;
-		this.peerInfo = builder.peerInfo;
 		this.numWant = builder.numWant;
 		this.event = builder.event;
 	}
 
 	public InfoHash getInfoHash() {
 		return infoHash;
-	}
-
-	public PeerInfo getPeerInfo() {
-		return peerInfo;
 	}
 
 	public int getNumWant() {
@@ -35,7 +29,6 @@ public class AnnounceRequest {
 	public static AnnounceRequest read(ByteBuffer data) {
 		Builder builder = new Builder();
 		builder.infoHash(InfoHash.read(data));
-		builder.peerInfo(PeerInfo.read(data));
 		builder.numWant(data.get() & 0xFF);
 		builder.event(AnnounceEvent.byValue(data.get() & 0xFF));
 		return builder.build();
@@ -44,17 +37,11 @@ public class AnnounceRequest {
 	public static class Builder {
 
 		private InfoHash infoHash;
-		private PeerInfo peerInfo;
 		private int numWant;
 		private AnnounceEvent event;
 
 		public Builder infoHash(InfoHash infoHash) {
 			this.infoHash = infoHash;
-			return this;
-		}
-
-		public Builder peerInfo(PeerInfo peerInfo) {
-			this.peerInfo = peerInfo;
 			return this;
 		}
 

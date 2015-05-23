@@ -44,10 +44,6 @@ typedef struct nanotorrent_announce_request {
 	 */
 	sha1_digest_t info_hash;
 	/**
-	 * Peer connection info
-	 */
-	nanotorrent_peer_info_t peer_info;
-	/**
 	 * Number of other peers wanted
 	 */
 	uint8_t num_want;

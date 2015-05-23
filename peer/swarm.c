@@ -133,17 +133,9 @@ nanotorrent_peer_info_t *nanotorrent_swarm_pop_peer() {
 }
 
 void nanotorrent_swarm_announce_send(nanotracker_announce_event_t event) {
-	// Get own global IPv6 address
-	uip_ds6_addr_t *global_ds6_addr = uip_ds6_get_global(-1);
-	if (global_ds6_addr == NULL) {
-		ERROR("No global address");
-		return;
-	}
-
 	// Create announce request
 	nanotorrent_announce_request_t request;
 	sha1_copy(&request.info_hash, &state.info_hash);
-	uip_ip6addr_copy(&request.peer_info.peer_ip, &global_ds6_addr->ipaddr);
 	request.num_want = NANOTORRENT_MAX_SWARM_PEERS;
 	request.event = event;
 

@@ -21,7 +21,6 @@ void nanotorrent_unpack_peer_info(const uint8_t **cur,
 void nanotorrent_pack_announce_request(uint8_t **cur,
 		const nanotorrent_announce_request_t *request) {
 	nanotorrent_pack_sha1_digest(cur, &request->info_hash);
-	nanotorrent_pack_peer_info(cur, &request->peer_info);
 	nanotorrent_pack_uint8(cur, &request->num_want);
 	nanotorrent_pack_uint8(cur, &request->event);
 }
@@ -29,7 +28,6 @@ void nanotorrent_pack_announce_request(uint8_t **cur,
 void nanotorrent_unpack_announce_request(const uint8_t **cur,
 		nanotorrent_announce_request_t *request) {
 	nanotorrent_unpack_sha1_digest(cur, &request->info_hash);
-	nanotorrent_unpack_peer_info(cur, &request->peer_info);
 	nanotorrent_unpack_uint8(cur, &request->num_want);
 	nanotorrent_unpack_uint8(cur, &request->event);
 }

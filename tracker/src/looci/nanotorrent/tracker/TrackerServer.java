@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import looci.nanotorrent.tracker.protocol.AnnounceReply;
 import looci.nanotorrent.tracker.protocol.AnnounceRequest;
+import looci.nanotorrent.tracker.protocol.PeerInfo;
 
 public class TrackerServer implements Closeable {
 
@@ -90,7 +91,8 @@ public class TrackerServer implements Closeable {
 		buffer.flip();
 		AnnounceRequest request = AnnounceRequest.read(buffer);
 		// Handle request
-		AnnounceReply reply = tracker.handleAnnounceRequest(request);
+		PeerInfo peerInfo = new PeerInfo((Inet6Address) remote.getAddress());
+		AnnounceReply reply = tracker.handleAnnounceRequest(request, peerInfo);
 		// Write reply
 		buffer.clear();
 		reply.write(buffer);

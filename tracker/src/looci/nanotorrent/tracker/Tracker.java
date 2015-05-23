@@ -48,9 +48,10 @@ public class Tracker {
 		return untrack(torrent.getInfoHash());
 	}
 
-	public AnnounceReply handleAnnounceRequest(AnnounceRequest request) {
+	public AnnounceReply handleAnnounceRequest(AnnounceRequest request,
+			PeerInfo peerInfo) {
 		log(Level.FINE, "Announce request received from %s with event %s",
-				request.getPeerInfo(), request.getEvent());
+				peerInfo, request.getEvent());
 
 		TrackedTorrent torrent = getTorrent(request.getInfoHash());
 		if (torrent == null) {
@@ -62,7 +63,7 @@ public class Tracker {
 		AnnounceReply.Builder reply = new AnnounceReply.Builder();
 		reply.infoHash(torrent.getInfoHash());
 
-		TrackedPeer peer = torrent.getPeer(request.getPeerInfo());
+		TrackedPeer peer = torrent.getPeer(peerInfo);
 
 		if (request.getEvent() == AnnounceEvent.STOPPED) {
 			if (peer != null) {
@@ -71,18 +72,18 @@ public class Tracker {
 				updatePeerState(peer, request.getEvent());
 			}
 			// Stop tracking peer
-			log(Level.INFO, "Stop tracking peer %s in %s",
-					request.getPeerInfo(), torrent.getInfoHash());
-			torrent.removePeer(request.getPeerInfo());
+			log(Level.INFO, "Stop tracking peer %s in %s", peerInfo,
+					torrent.getInfoHash());
+			torrent.removePeer(peerInfo);
 			// Return empty reply
 			return reply.build();
 		}
 
 		if (peer == null) {
 			// Start tracking peer
-			log(Level.INFO, "Start tracking peer %s in %s",
-					request.getPeerInfo(), torrent.getInfoHash());
-			peer = torrent.addPeer(request.getPeerInfo(), now);
+			log(Level.INFO, "Start tracking peer %s in %s", peerInfo,
+					torrent.getInfoHash());
+			peer = torrent.addPeer(peerInfo, now);
 		}
 
 		// Update state
