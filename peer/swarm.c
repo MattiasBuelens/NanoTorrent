@@ -202,8 +202,7 @@ void nanotorrent_swarm_join() {
 	nanotorrent_swarm_announce_start(NANOTRACKER_ANNOUNCE_STARTED);
 	// Notify joining
 	swarm_state = NANOTORRENT_SWARM_JOINING;
-	nanotorrent_swarm_post_event()
-	;
+	nanotorrent_swarm_post_event();
 }
 
 void nanotorrent_swarm_leave_quiet() {
@@ -225,8 +224,7 @@ void nanotorrent_swarm_leave() {
 		// Announce leave
 		nanotorrent_swarm_announce_send(NANOTRACKER_ANNOUNCE_STOPPED);
 		// Notify left
-		nanotorrent_swarm_post_event()
-		;
+		nanotorrent_swarm_post_event();
 	}
 }
 
@@ -236,8 +234,7 @@ void nanotorrent_swarm_force_leave() {
 	if (was_joined) {
 		// Notify left
 		swarm_state = NANOTORRENT_SWARM_LEFT;
-		nanotorrent_swarm_post_event()
-		;
+		nanotorrent_swarm_post_event();
 	}
 }
 
@@ -265,16 +262,14 @@ void nanotorrent_swarm_handle_join() {
 	// Start periodic announce refresh
 	etimer_set(&refresh, NANOTORRENT_ANNOUNCE_REFRESH_PERIOD);
 	// Notify joined
-	nanotorrent_swarm_post_event()
-	;
+	nanotorrent_swarm_post_event();
 }
 
 void nanotorrent_swarm_handle_refresh() {
 	// Restart periodic announce refresh
 	etimer_set(&refresh, NANOTORRENT_ANNOUNCE_REFRESH_PERIOD);
 	// Notify refreshed
-	nanotorrent_swarm_post_event()
-	;
+	nanotorrent_swarm_post_event();
 }
 
 void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
