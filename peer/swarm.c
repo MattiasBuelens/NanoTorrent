@@ -263,7 +263,7 @@ void nanotorrent_swarm_handle_join() {
 	// Mark as joined
 	swarm_state = NANOTORRENT_SWARM_JOINED;
 	// Start periodic announce refresh
-	etimer_restart(&refresh);
+	etimer_set(&refresh, NANOTORRENT_ANNOUNCE_REFRESH_PERIOD);
 	// Notify joined
 	nanotorrent_swarm_post_event()
 	;
@@ -271,7 +271,7 @@ void nanotorrent_swarm_handle_join() {
 
 void nanotorrent_swarm_handle_refresh() {
 	// Restart periodic announce refresh
-	etimer_reset(&refresh);
+	etimer_set(&refresh, NANOTORRENT_ANNOUNCE_REFRESH_PERIOD);
 	// Notify refreshed
 	nanotorrent_swarm_post_event()
 	;
@@ -351,7 +351,7 @@ PROCESS_THREAD(nanotorrent_swarm_process, ev, data) {
 			nanotorrent_retry_process(&announce_retry);
 			// Send announce refresh periodically
 			if (etimer_expired(&refresh)) {
-				etimer_reset(&refresh);
+				etimer_restart(&refresh);
 				nanotorrent_swarm_refresh();
 			}
 			// Wait for retries and refreshes
