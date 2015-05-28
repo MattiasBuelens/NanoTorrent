@@ -22,7 +22,7 @@ PROCESS_THREAD(nanotorrent_demo_process, ev, data) {
 		printf("\n");
 
 		// Initialize descriptor
-		nanotorrent_torrent_desc_t desc;
+		nanotorrent_torrent_desc_t desc = { };
 		uip_ip6addr(&desc.tracker_ip, 0xaaaa, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 				0x1);
 		desc.tracker_port = 33333;
