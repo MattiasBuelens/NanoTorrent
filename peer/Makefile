@@ -13,6 +13,9 @@ PROJECT_SOURCEFILES += pack-basic.c pack-peer.c pack-swarm.c pack-torrent.c
 
 CONTIKI_WITH_IPV6 = 1
 
+# File to seed the torrent
+SEED_FILE = fs-demo/loremipsum.txt
+
 DEFAULT_TARGET = avr-zigduino
 ifeq ($(TARGET),)
   -include Makefile.target
