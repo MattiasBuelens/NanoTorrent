@@ -68,5 +68,6 @@ obj_*/
 *.avr-zigduino
 *.native
 *.minimal-net
+*.cooja
 !Makefile.*
 Makefile.target
