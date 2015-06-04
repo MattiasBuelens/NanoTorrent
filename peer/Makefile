@@ -2,7 +2,6 @@ CONTIKI_PROJECT = demo
 all: $(CONTIKI_PROJECT)
 
 CONTIKI = ../contiki
-TARGET = avr-zigduino
 
 PROJECT_SOURCEFILES += nanotorrent.c retry.c swarm.c peer.c piece.c piece-select.c torrent.c bitset.c
 
@@ -13,4 +12,17 @@ PROJECTDIRS += pack
 PROJECT_SOURCEFILES += pack-basic.c pack-peer.c pack-swarm.c pack-torrent.c
 
 CONTIKI_WITH_IPV6 = 1
+
+DEFAULT_TARGET = avr-zigduino
+ifeq ($(TARGET),)
+  -include Makefile.target
+  ifeq ($(TARGET),)
+    ${info TARGET not defined, using target '$(DEFAULT_TARGET)'}
+    TARGET = $(DEFAULT_TARGET)
+  else
+    ${info using saved target '$(TARGET)'}
+  endif
+endif
+
+-include Makefile.$(TARGET)
 include $(CONTIKI)/Makefile.include

@@ -68,3 +68,5 @@ obj_*/
 *.avr-zigduino
 *.native
 *.minimal-net
+!Makefile.*
+Makefile.target
