@@ -337,7 +337,7 @@ void nanotorrent_peer_data_received(const nanotorrent_peer_info_t *peer,
 		return;
 	}
 	// Is piece completed?
-	uint16_t piece_size = nanotorrent_piece_size(&state.desc.info, piece_index);
+	uint16_t piece_size = nanotorrent_piece_size(piece_index);
 	uint16_t next_offset = data_offset + data_length;
 	if (next_offset < piece_size) {
 		// Start next request
@@ -473,12 +473,12 @@ uint8_t *nanotorrent_peer_write_data_reply(uint8_t *buf, uint16_t buffer_size,
 	uint16_t header_len = buf - header_start;
 
 	// Write data
-	uint16_t data_length = nanotorrent_piece_read(piece_index, data_start, buf,
+	int32_t read = nanotorrent_piece_read(piece_index, data_start, buf,
 			buffer_size - header_len);
-	if (data_length < 0) {
-		return 0;
+	if (read <= 0) {
+		return NULL;
 	}
-	buf += data_length;
+	buf += read;
 
 	return buf;
 }
@@ -489,6 +489,11 @@ void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
 
 	// Parse request header
 	nanotorrent_unpack_peer_data(buffer, &request);
+
+	if (!nanotorrent_piece_is_valid(request.piece_index)) {
+		ERROR("Data request for invalid piece index: %u", request.piece_index);
+		return;
+	}
 
 	// Check if we have requested piece
 	if (!nanotorrent_piece_is_complete(request.piece_index)) {
@@ -527,6 +532,11 @@ void nanotorrent_peer_handle_data_reply(const uint8_t *buffer,
 	uint16_t header_length = data - buffer;
 	uint16_t data_length = buffer_length - header_length;
 
+	if (!nanotorrent_piece_is_valid(reply.piece_index)) {
+		ERROR("Data reply for invalid piece index: %u", reply.piece_index);
+		return;
+	}
+
 	// Check if we are interested in this data
 	if (nanotorrent_peer_should_receive_data(peer, reply.piece_index,
 			reply.data_start, data_length)) {
@@ -534,9 +544,9 @@ void nanotorrent_peer_handle_data_reply(const uint8_t *buffer,
 	}
 
 	// Write piece data
-	uint16_t written = nanotorrent_piece_write(reply.piece_index,
+	int32_t written = nanotorrent_piece_write(reply.piece_index,
 			reply.data_start, data, data_length);
-	if (written < 0) {
+	if (written <= 0) {
 		return;
 	}
 

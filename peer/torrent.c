@@ -34,7 +34,7 @@ bool nanotorrent_torrent_info_create(nanotorrent_torrent_info_t *info,
 	// Calculate piece hashes
 	sha1_context_t context;
 	uint8_t piece_index = 0;
-	uint16_t piece_length = 0;
+	int32_t piece_length = 0;
 	do {
 		// Digest piece
 		sha1_init(&context);

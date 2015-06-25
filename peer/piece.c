@@ -22,33 +22,37 @@ static int own_file;
  */
 static uint32_t own_have;
 
-uint16_t nanotorrent_piece_offset(const nanotorrent_torrent_info_t *info,
-		const uint8_t piece_index) {
-	if (piece_index < 0 || piece_index >= info->num_pieces) {
-		ERROR("Invalid piece index: %u", piece_index);
-		return -1;
-	}
-	return piece_index * info->piece_size;
+bool nanotorrent_piece_is_valid(const uint8_t piece_index) {
+	return piece_index < state.desc.info.num_pieces;
 }
 
-uint16_t nanotorrent_piece_size(const nanotorrent_torrent_info_t *info,
-		const uint8_t piece_index) {
-	if (piece_index < 0 || piece_index >= info->num_pieces) {
+uint16_t nanotorrent_piece_offset(const uint8_t piece_index) {
+	if (!nanotorrent_piece_is_valid(piece_index)) {
 		ERROR("Invalid piece index: %u", piece_index);
-		return -1;
+		return 0;
 	}
-	if (piece_index == info->num_pieces - 1) {
+	return piece_index * state.desc.info.piece_size;
+}
+
+uint16_t nanotorrent_piece_size(const uint8_t piece_index) {
+	if (!nanotorrent_piece_is_valid(piece_index)) {
+		ERROR("Invalid piece index: %u", piece_index);
+		return 0;
+	}
+	const uint16_t file_size = state.desc.info.file_size;
+	const uint16_t piece_size = state.desc.info.piece_size;
+	if (piece_index == state.desc.info.num_pieces - 1) {
 		// Size of last piece may be less than piece size
 		if (piece_index == 0) {
 			// Single piece holding whole file
-			return info->file_size;
+			return file_size;
 		} else {
 			// Multiple pieces, ensure no piece has zero size
-			uint16_t remainder = info->file_size % info->piece_size;
-			return remainder == 0 ? info->piece_size : remainder;
+			uint16_t remainder = file_size % piece_size;
+			return remainder == 0 ? piece_size : remainder;
 		}
 	}
-	return info->piece_size;
+	return piece_size;
 }
 
 void nanotorrent_piece_init() {
@@ -86,7 +90,7 @@ bool nanotorrent_piece_is_seed() {
 }
 
 bool nanotorrent_piece_is_complete(const uint8_t piece_index) {
-	if (piece_index < 0 || piece_index >= state.desc.info.num_pieces) {
+	if (!nanotorrent_piece_is_valid(piece_index)) {
 		ERROR("Invalid piece index: %u", piece_index);
 		return false;
 	}
@@ -94,7 +98,7 @@ bool nanotorrent_piece_is_complete(const uint8_t piece_index) {
 }
 
 void nanotorrent_piece_set_complete(const uint8_t piece_index, bool is_complete) {
-	if (piece_index < 0 || piece_index >= state.desc.info.num_pieces) {
+	if (!nanotorrent_piece_is_valid(piece_index)) {
 		ERROR("Invalid piece index: %u", piece_index);
 		return;
 	}
@@ -109,22 +113,21 @@ uint8_t nanotorrent_piece_count_complete() {
 	return nanotorrent_bitset_count(own_have);
 }
 
-uint16_t nanotorrent_piece_read(const uint8_t piece_index,
+int32_t nanotorrent_piece_read(const uint8_t piece_index,
 		const uint8_t data_offset, uint8_t *buffer,
 		const uint16_t buffer_length) {
-	uint16_t piece_size = nanotorrent_piece_size(&state.desc.info, piece_index);
-	if (piece_size < 0) {
+	if (!nanotorrent_piece_is_valid(piece_index)) {
 		ERROR("Invalid piece index: %u", piece_index);
 		return -1;
 	}
+	uint16_t piece_size = nanotorrent_piece_size(piece_index);
 	if (data_offset >= piece_size) {
 		ERROR("Data offset %u exceeds piece size %u for piece index %u",
 				data_offset, piece_size, piece_index);
 		return -1;
 	}
 	// Seek to start of requested piece data
-	uint16_t piece_offset = nanotorrent_piece_offset(&state.desc.info,
-			piece_index);
+	uint16_t piece_offset = nanotorrent_piece_offset(piece_index);
 	uint16_t offset = piece_offset + data_offset;
 	if (cfs_seek(own_file, offset, CFS_SEEK_SET) < 0) {
 		ERROR("Could not seek to piece %u at offset %u", piece_index, offset);
@@ -132,7 +135,7 @@ uint16_t nanotorrent_piece_read(const uint8_t piece_index,
 	}
 	// Read piece data into buffer
 	uint16_t data_length = piece_size - data_offset;
-	uint16_t read = cfs_read(own_file, buffer, MIN(buffer_length, data_length));
+	int read = cfs_read(own_file, buffer, MIN(buffer_length, data_length));
 	if (read < 0) {
 		ERROR("Could not read piece %u at offset %u", piece_index, offset);
 		return -1;
@@ -140,22 +143,21 @@ uint16_t nanotorrent_piece_read(const uint8_t piece_index,
 	return read;
 }
 
-uint16_t nanotorrent_piece_write(const uint8_t piece_index,
+int32_t nanotorrent_piece_write(const uint8_t piece_index,
 		const uint8_t data_offset, const uint8_t *buffer,
 		const uint16_t buffer_length) {
-	uint16_t piece_size = nanotorrent_piece_size(&state.desc.info, piece_index);
-	if (piece_size < 0) {
+	if (!nanotorrent_piece_is_valid(piece_index)) {
 		ERROR("Invalid piece index: %u", piece_index);
 		return -1;
 	}
+	uint16_t piece_size = nanotorrent_piece_size(piece_index);
 	if (data_offset >= piece_size) {
 		ERROR("Data offset %u exceeds piece size %u for piece index %u",
 				data_offset, piece_size, piece_index);
 		return -1;
 	}
 	// Seek to start of provided piece data
-	uint16_t piece_offset = nanotorrent_piece_offset(&state.desc.info,
-			piece_index);
+	uint16_t piece_offset = nanotorrent_piece_offset(piece_index);
 	uint16_t offset = piece_offset + data_offset;
 	if (cfs_seek(own_file, offset, CFS_SEEK_SET) < 0) {
 		ERROR("Could not seek to piece %u at offset %u", piece_index, offset);
@@ -163,8 +165,7 @@ uint16_t nanotorrent_piece_write(const uint8_t piece_index,
 	}
 	// Write buffer into piece data
 	uint16_t data_length = piece_size - data_offset;
-	uint16_t written = cfs_write(own_file, buffer,
-			MIN(buffer_length, data_length));
+	int written = cfs_write(own_file, buffer, MIN(buffer_length, data_length));
 	if (written < 0) {
 		ERROR("Could not write piece %u at offset %u", piece_index, offset);
 		return -1;
@@ -172,7 +173,7 @@ uint16_t nanotorrent_piece_write(const uint8_t piece_index,
 	return written;
 }
 
-uint16_t nanotorrent_piece_digest(sha1_context_t *context, const int file,
+int32_t nanotorrent_piece_digest(sha1_context_t *context, const int file,
 		const uint16_t piece_size) {
 	// Process at most piece_size bytes
 	uint16_t length = 0;
@@ -202,11 +203,12 @@ uint16_t nanotorrent_piece_digest(sha1_context_t *context, const int file,
 
 bool nanotorrent_piece_verify(sha1_context_t *context,
 		const uint8_t piece_index) {
-	uint16_t offset = nanotorrent_piece_offset(&state.desc.info, piece_index);
-	if (offset < 0) {
+	if (!nanotorrent_piece_is_valid(piece_index)) {
+		ERROR("Invalid piece index: %u", piece_index);
 		return false;
 	}
-	uint16_t size = nanotorrent_piece_size(&state.desc.info, piece_index);
+	uint16_t offset = nanotorrent_piece_offset(piece_index);
+	uint16_t size = nanotorrent_piece_size(piece_index);
 	// Seek to start of piece
 	int file = own_file;
 	if (cfs_seek(file, offset, CFS_SEEK_SET) < 0) {
@@ -215,7 +217,7 @@ bool nanotorrent_piece_verify(sha1_context_t *context,
 	// Calculate piece digest
 	sha1_digest_t digest;
 	sha1_init(context);
-	uint16_t piece_length = nanotorrent_piece_digest(context, file, size);
+	int32_t piece_length = nanotorrent_piece_digest(context, file, size);
 	if (piece_length < 0) {
 		return false;
 	}
