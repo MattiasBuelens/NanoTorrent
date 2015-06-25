@@ -403,9 +403,8 @@ void nanotorrent_peer_send_close(const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_make_header(&message.header, NANOTORRENT_PEER_CLOSE);
 
 	uint8_t buffer[sizeof(message)];
-	uint8_t *cur = buffer;
-	nanotorrent_pack_peer_close(&cur, &message);
-	uint16_t length = cur - buffer;
+	uint8_t *end = nanotorrent_pack_peer_close(buffer, &message);
+	uint16_t length = end - buffer;
 
 	nanotorrent_peer_send_message(buffer, length, peer);
 }
@@ -415,9 +414,8 @@ void nanotorrent_peer_send_have(const nanotorrent_peer_info_t *peer) {
 	nanotorrent_peer_make_header(&message.header, NANOTORRENT_PEER_HAVE);
 
 	uint8_t buffer[sizeof(message)];
-	uint8_t *cur = buffer;
-	nanotorrent_pack_peer_have(&cur, &message);
-	uint16_t length = cur - buffer;
+	uint8_t *end = nanotorrent_pack_peer_have(buffer, &message);
+	uint16_t length = end - buffer;
 
 	nanotorrent_peer_send_message(buffer, length, peer);
 }
@@ -440,9 +438,8 @@ void nanotorrent_peer_send_have_local_multicast() {
 	nanotorrent_peer_make_header(&message.header, NANOTORRENT_PEER_HAVE);
 
 	uint8_t buffer[sizeof(message)];
-	uint8_t *cur = buffer;
-	nanotorrent_pack_peer_have(&cur, &message);
-	uint16_t length = cur - buffer;
+	uint8_t *end = nanotorrent_pack_peer_have(buffer, &message);
+	uint16_t length = end - buffer;
 
 	nanotorrent_peer_send_local_multicast(buffer, length);
 }
@@ -457,14 +454,13 @@ void nanotorrent_peer_send_data_request(const nanotorrent_peer_info_t *peer,
 	request.data_start = data_start;
 
 	uint8_t buffer[sizeof(request)];
-	uint8_t *cur = buffer;
-	nanotorrent_pack_peer_data(&cur, &request);
-	uint16_t length = cur - buffer;
+	uint8_t *end = nanotorrent_pack_peer_data(buffer, &request);
+	uint16_t length = end - buffer;
 
 	nanotorrent_peer_send_message(buffer, length, peer);
 }
 
-uint16_t nanotorrent_peer_write_data_reply(uint8_t **cur, uint16_t buffer_size,
+uint8_t *nanotorrent_peer_write_data_reply(uint8_t *buf, uint16_t buffer_size,
 		uint8_t piece_index, uint16_t data_start) {
 	// Write header
 	nanotorrent_peer_data_t reply;
@@ -472,21 +468,19 @@ uint16_t nanotorrent_peer_write_data_reply(uint8_t **cur, uint16_t buffer_size,
 	reply.piece_index = piece_index;
 	reply.data_start = data_start;
 
-	uint8_t *header_start = *cur;
-	nanotorrent_pack_peer_data(cur, &reply);
-	uint8_t *header_end = *cur;
-	uint16_t header_length = header_end - header_start;
+	uint8_t *header_start = buf;
+	buf = nanotorrent_pack_peer_data(buf, &reply);
+	uint16_t header_len = buf - header_start;
 
 	// Write data
-	uint16_t data_length = nanotorrent_piece_read(piece_index, data_start, *cur,
-			buffer_size - header_length);
+	uint16_t data_length = nanotorrent_piece_read(piece_index, data_start, buf,
+			buffer_size - header_len);
 	if (data_length < 0) {
 		return 0;
 	}
-	*cur += data_length;
+	buf += data_length;
 
-	// Return number of data bytes in reply
-	return data_length;
+	return buf;
 }
 
 void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
@@ -494,8 +488,7 @@ void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
 	nanotorrent_peer_data_t request;
 
 	// Parse request header
-	const uint8_t *cur = buffer;
-	nanotorrent_unpack_peer_data(&cur, &request);
+	nanotorrent_unpack_peer_data(buffer, &request);
 
 	// Check if we have requested piece
 	if (!nanotorrent_piece_is_complete(request.piece_index)) {
@@ -505,15 +498,14 @@ void nanotorrent_peer_handle_data_request(const uint8_t *buffer,
 
 	// Reply with (part of) requested data
 	uint8_t reply_buffer[NANOTORRENT_MAX_UDP_PAYLOAD_SIZE];
-	uint8_t *reply_cur = reply_buffer;
-	uint16_t data_length = nanotorrent_peer_write_data_reply(&reply_cur,
+	uint8_t *reply_end = nanotorrent_peer_write_data_reply(reply_buffer,
 			sizeof(reply_buffer), request.piece_index, request.data_start);
-	if (data_length == 0) {
+	if (reply_end == NULL) {
 		return;
 	}
 
 	// Send reply
-	uint16_t reply_length = reply_cur - reply_buffer;
+	uint16_t reply_length = reply_end - reply_buffer;
 
 #if NANOTORRENT_LOCAL
 	if (nanotorrent_peer_is_local(peer)) {
@@ -531,9 +523,8 @@ void nanotorrent_peer_handle_data_reply(const uint8_t *buffer,
 	nanotorrent_peer_data_t reply;
 
 	// Parse reply header
-	const uint8_t *cur = buffer;
-	nanotorrent_unpack_peer_data(&cur, &reply);
-	uint16_t header_length = cur - buffer;
+	const uint8_t *data = nanotorrent_unpack_peer_data(buffer, &reply);
+	uint16_t header_length = data - buffer;
 	uint16_t data_length = buffer_length - header_length;
 
 	// Check if we are interested in this data
@@ -543,7 +534,6 @@ void nanotorrent_peer_handle_data_reply(const uint8_t *buffer,
 	}
 
 	// Write piece data
-	const uint8_t *data = cur;
 	uint16_t written = nanotorrent_piece_write(reply.piece_index,
 			reply.data_start, data, data_length);
 	if (written < 0) {
@@ -562,8 +552,7 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 	nanotorrent_peer_message_header_t header;
 
 	// Parse peer message header
-	const uint8_t *cur = data;
-	nanotorrent_unpack_peer_message_header(&cur, &header);
+	nanotorrent_unpack_peer_message_header(data, &header);
 
 	// Compare torrent info hash
 	if (!sha1_cmp(&state.info_hash, &header.info_hash)) {

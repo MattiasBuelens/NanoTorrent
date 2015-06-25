@@ -145,9 +145,8 @@ void nanotorrent_swarm_announce_send(nanotracker_announce_event_t event) {
 
 	// Pack request
 	uint8_t data[sizeof(request)];
-	uint8_t *cur = data;
-	nanotorrent_pack_announce_request(&cur, &request);
-	uint16_t len = cur - data;
+	uint8_t *end = nanotorrent_pack_announce_request(data, &request);
+	uint16_t len = end - data;
 
 	// Send request
 	udp_socket_send(&tracker_socket, data, len);
@@ -277,10 +276,9 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 		const uip_ipaddr_t *dest_addr, uint16_t dest_port, const uint8_t *data,
 		uint16_t datalen) {
 	nanotorrent_announce_reply_t reply;
-	const uint8_t *cur = data;
 
 	// Parse reply
-	nanotorrent_unpack_announce_reply(&cur, &reply);
+	data = nanotorrent_unpack_announce_reply(data, &reply);
 
 	// Compare torrent info hash
 	if (!sha1_cmp(&state.info_hash, &reply.info_hash)) {
@@ -299,7 +297,7 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 		if (peer == NULL) {
 			break;
 		}
-		nanotorrent_unpack_peer_info(&cur, peer);
+		data = nanotorrent_unpack_peer_info(data, peer);
 	}
 
 	// Mark as joined

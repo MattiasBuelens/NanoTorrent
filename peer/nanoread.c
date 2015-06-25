@@ -86,9 +86,8 @@ int main(int argc, char **argv) {
 
 	// Unpack torrent descriptor
 	nanotorrent_torrent_desc_t desc;
-	const uint8_t *desc_cur = buffer;
-	nanotorrent_unpack_torrent_desc(&desc_cur, &desc);
-	size_t desc_len = desc_cur - buffer;
+	const uint8_t *desc_end = nanotorrent_unpack_torrent_desc(buffer, &desc);
+	size_t desc_len = desc_end - buffer;
 	if (buffer_len != desc_len) {
 		ERROR("Malformed source file");
 		goto error_src;

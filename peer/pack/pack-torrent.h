@@ -10,16 +10,16 @@
 
 #include "../torrent.h"
 
-void nanotorrent_pack_torrent_info(uint8_t **cur,
+uint8_t *nanotorrent_pack_torrent_info(uint8_t *buf,
 		const nanotorrent_torrent_info_t *info);
 
-void nanotorrent_unpack_torrent_info(const uint8_t **cur,
+const uint8_t *nanotorrent_unpack_torrent_info(const uint8_t *buf,
 		nanotorrent_torrent_info_t *info);
 
-void nanotorrent_pack_torrent_desc(uint8_t **cur,
+uint8_t *nanotorrent_pack_torrent_desc(uint8_t *buf,
 		const nanotorrent_torrent_desc_t *desc);
 
-void nanotorrent_unpack_torrent_desc(const uint8_t **cur,
+const uint8_t *nanotorrent_unpack_torrent_desc(const uint8_t *buf,
 		nanotorrent_torrent_desc_t *desc);
 
 #endif /* NANOTORRENT_PACK_TORRENT_H_ */

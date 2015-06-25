@@ -131,9 +131,8 @@ int main(int argc, char **argv) {
 
 	// Pack descriptor
 	uint8_t buffer[1024];
-	uint8_t *cur = buffer;
-	nanotorrent_pack_torrent_desc(&cur, &desc);
-	size_t desc_len = cur - buffer;
+	uint8_t *desc_end = nanotorrent_pack_torrent_desc(buffer, &desc);
+	size_t desc_len = desc_end - buffer;
 
 	// Write descriptor to temporary output file
 	char out_name[64];

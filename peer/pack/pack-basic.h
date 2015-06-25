@@ -10,24 +10,26 @@
 
 #include "../common.h"
 
-void nanotorrent_pack_uint8(uint8_t **cur, const uint8_t *num);
+uint8_t *nanotorrent_pack_uint8(uint8_t *buf, const uint8_t *num);
 
-void nanotorrent_unpack_uint8(const uint8_t **cur, uint8_t *num);
+const uint8_t *nanotorrent_unpack_uint8(const uint8_t *buf, uint8_t *num);
 
-void nanotorrent_pack_uint16(uint8_t **cur, const uint16_t *num);
+uint8_t *nanotorrent_pack_uint16(uint8_t *buf, const uint16_t *num);
 
-void nanotorrent_unpack_uint16(const uint8_t **cur, uint16_t *num);
+const uint8_t *nanotorrent_unpack_uint16(const uint8_t *buf, uint16_t *num);
 
-void nanotorrent_pack_uint32(uint8_t **cur, const uint32_t *num);
+uint8_t *nanotorrent_pack_uint32(uint8_t *buf, const uint32_t *num);
 
-void nanotorrent_unpack_uint32(const uint8_t **cur, uint32_t *num);
+const uint8_t *nanotorrent_unpack_uint32(const uint8_t *buf, uint32_t *num);
 
-void nanotorrent_pack_ip6addr(uint8_t **cur, const uip_ip6addr_t *addr);
+uint8_t *nanotorrent_pack_ip6addr(uint8_t *buf, const uip_ip6addr_t *addr);
 
-void nanotorrent_unpack_ip6addr(const uint8_t **cur, uip_ip6addr_t *addr);
+const uint8_t *nanotorrent_unpack_ip6addr(const uint8_t *buf,
+		uip_ip6addr_t *addr);
 
-void nanotorrent_pack_sha1_digest(uint8_t **cur, const sha1_digest_t *digest);
+uint8_t *nanotorrent_pack_sha1_digest(uint8_t *buf, const sha1_digest_t *digest);
 
-void nanotorrent_unpack_sha1_digest(const uint8_t **cur, sha1_digest_t *digest);
+const uint8_t *nanotorrent_unpack_sha1_digest(const uint8_t *buf,
+		sha1_digest_t *digest);
 
 #endif /* NANOTORRENT_PACK_BASIC_H_ */

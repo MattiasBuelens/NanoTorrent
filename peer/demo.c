@@ -26,9 +26,8 @@ PROCESS_THREAD(nanotorrent_demo_process, ev, data) {
 		// Read descriptor from static file
 		nanotorrent_torrent_desc_t desc = { };
 		uint8_t buffer[sizeof(desc)];
-		const uint8_t *cur = buffer;
 		nanotorrent_fs_read(nanotorrent_fs_root, buffer, sizeof(buffer));
-		nanotorrent_unpack_torrent_desc(&cur, &desc);
+		nanotorrent_unpack_torrent_desc(buffer, &desc);
 
 		const char *file_name = "myprogram";
 
