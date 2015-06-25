@@ -71,3 +71,4 @@ obj_*/
 *.cooja
 !Makefile.*
 Makefile.target
+fs-data.c

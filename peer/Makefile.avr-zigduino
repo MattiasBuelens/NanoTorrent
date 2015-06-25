@@ -5,9 +5,9 @@ CFLAGS += -DCFS_EEPROM_CONF_OFFSET=$(CFS_OFFSET)
 # Create special EEPROM containing seed file
 #  * %.seed.eep target creates EEPROM
 #  * %.seed.eu target uploads EEPROM
-%.seed.eep: %.eep $(SEED_FILE)
+%.seed.eep: %.eep $(TORRENT_FILE)
 	$(OBJCOPY) \
-		--add-section=.eepromfile=$(SEED_FILE) \
+		--add-section=.eepromfile=$(TORRENT_FILE) \
 		--set-section-flags=.eepromfile="alloc,load" \
 		--change-section-lma .eepromfile=$(CFS_OFFSET) \
 		-O ihex $< $@

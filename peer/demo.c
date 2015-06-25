@@ -8,6 +8,8 @@
 #include "contiki.h"
 
 #include "nanotorrent.h"
+#include "fs.h"
+#include "pack.h"
 
 /*---------------------------------------------------------------------------*/
 PROCESS(nanotorrent_demo_process, "NanoTorrent demonstration");
@@ -21,15 +23,12 @@ PROCESS_THREAD(nanotorrent_demo_process, ev, data) {
 		printf("===========\n");
 		printf("\n");
 
-		// Initialize descriptor
+		// Read descriptor from static file
 		nanotorrent_torrent_desc_t desc = { };
-		uip_ip6addr(&desc.tracker_ip, 0xaaaa, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-				0x1);
-		desc.tracker_port = 33333;
-		desc.info.file_size = (1 << 12);
-		desc.info.piece_size = (1 << 8);
-		desc.info.num_pieces = (1 << 4);
-		// TODO Initialize piece hashes
+		uint8_t buffer[sizeof(desc)];
+		const uint8_t *cur = buffer;
+		nanotorrent_fs_read(nanotorrent_fs_root, buffer, sizeof(buffer));
+		nanotorrent_unpack_torrent_desc(&cur, &desc);
 
 		const char *file_name = "myprogram";
 
@@ -37,7 +36,8 @@ PROCESS_THREAD(nanotorrent_demo_process, ev, data) {
 
 		// TODO For debugging
 		while (1) {
-			PROCESS_WAIT_EVENT();
+			PROCESS_WAIT_EVENT()
+			;
 		}
 
 	PROCESS_END()
