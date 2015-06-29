@@ -94,7 +94,7 @@ void nanotorrent_swarm_shutdown() {
 
 bool nanotorrent_swarm_is_ready() {
 	// Need a global IPv6 address before attempting to join
-	if (uip_ds6_get_global(-1) == NULL) {
+	if (uip_ds6_get_global(ADDR_PREFERRED) == NULL) {
 		return false;
 	}
 	return true;
