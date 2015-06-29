@@ -80,6 +80,9 @@ void nanotorrent_swarm_init() {
 	// Register tracker socket
 	udp_socket_close(&tracker_socket);
 	udp_socket_register(&tracker_socket, NULL, nanotorrent_swarm_handle_reply);
+	// Connect to tracker
+	udp_socket_connect(&tracker_socket, &state.desc.tracker_ip,
+	state.desc.tracker_port);
 }
 
 void nanotorrent_swarm_shutdown() {
@@ -139,10 +142,6 @@ void nanotorrent_swarm_announce_send(nanotracker_announce_event_t event) {
 	request.num_want = NANOTORRENT_MAX_SWARM_PEERS;
 	request.event = event;
 
-	// Connect to tracker
-	udp_socket_connect(&tracker_socket, &state.desc.tracker_ip,
-	state.desc.tracker_port);
-
 	// Pack request
 	uint8_t data[sizeof(request)];
 	uint8_t *end = nanotorrent_pack_announce_request(data, &request);
@@ -158,9 +157,11 @@ void nanotorrent_swarm_announce_start(nanotracker_announce_event_t event) {
 			(NULL));
 }
 
-void nanotorrent_swarm_announce_stop() {
+nanotracker_announce_event_t nanotorrent_swarm_announce_stop() {
+	nanotracker_announce_event_t old_event = announce_retry_event;
 	announce_retry_event = 0;
 	nanotorrent_retry_stop(&announce_retry);
+	return old_event;
 }
 
 void nanotorrent_swarm_announce_retry(nanotorrent_retry_event_t event,
@@ -300,8 +301,12 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 		data = nanotorrent_unpack_peer_info(data, peer);
 	}
 
-	// Mark as joined
-	switch (announce_retry_event) {
+	// Stop retrying
+	nanotracker_announce_event_t event;
+	event = nanotorrent_swarm_announce_stop();
+
+	// Handle reply
+	switch (event) {
 	case NANOTRACKER_ANNOUNCE_STARTED:
 		// Successful join
 		nanotorrent_swarm_handle_join();
