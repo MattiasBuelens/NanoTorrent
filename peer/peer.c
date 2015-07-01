@@ -538,7 +538,7 @@ void nanotorrent_peer_handle_data_reply(const uint8_t *buffer,
 	}
 
 	// Check if we are interested in this data
-	if (nanotorrent_peer_should_receive_data(peer, reply.piece_index,
+	if (!nanotorrent_peer_should_receive_data(peer, reply.piece_index,
 			reply.data_start, data_length)) {
 		return;
 	}
