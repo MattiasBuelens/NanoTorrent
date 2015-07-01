@@ -37,9 +37,7 @@ typedef uint8_t bool;
 #include "net/ip/uip-debug.h"
 
 // http://maciejczyzewski.me/2015/02/21/better-debug-notices-in-c-using-macros.html
-#define NOTE(S, ...) PRINTF(                                             \
-  "(%s:%d, %s)\n  " S "\n",                                              \
-  __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define NOTE(S, ...) PRINTF("" S "\n", ##__VA_ARGS__)
 #define WARN(S, ...) PRINTF(                                             \
   "(%s:%d, %s)\n  Warning: " S "\n",                                     \
   __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
