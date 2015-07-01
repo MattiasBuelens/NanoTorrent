@@ -86,7 +86,7 @@ uint32_t nanotorrent_piece_have() {
 
 bool nanotorrent_piece_is_seed() {
 	uint32_t all = nanotorrent_piece_bitset_all();
-	return nanotorrent_bitset_contains(all, own_have);
+	return nanotorrent_bitset_contains(own_have, all);
 }
 
 bool nanotorrent_piece_is_complete(const uint8_t piece_index) {
