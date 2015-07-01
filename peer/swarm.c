@@ -25,8 +25,20 @@ static nanotorrent_swarm_state_t swarm_state;
 /**
  * Known peers
  */
+typedef struct nanotorrent_swarm_peer nanotorrent_swarm_peer_t;
+struct nanotorrent_swarm_peer {
+	/**
+	 * Next peer in list
+	 */
+	nanotorrent_swarm_peer_t *next;
+	/**
+	 * Peer info
+	 */
+	nanotorrent_peer_info_t peer_info;
+};
+
 LIST(peers);
-MEMB(peer_memb, nanotorrent_peer_info_t, NANOTORRENT_MAX_SWARM_PEERS);
+MEMB(peer_memb, nanotorrent_swarm_peer_t, NANOTORRENT_MAX_SWARM_PEERS);
 
 /**
  * UDP socket with tracker
@@ -128,11 +140,33 @@ void nanotorrent_swarm_clear_peers() {
 }
 
 nanotorrent_peer_info_t *nanotorrent_swarm_peek_peer() {
-	return list_head(peers);
+	nanotorrent_swarm_peer_t *peer;
+	peer = list_head(peers);
+	if (peer == NULL) {
+		return NULL;
+	}
+	return &peer->peer_info;
 }
 
-nanotorrent_peer_info_t *nanotorrent_swarm_pop_peer() {
-	return list_pop(peers);
+void nanotorrent_swarm_pop_peer() {
+	nanotorrent_swarm_peer_t *peer;
+	peer = list_pop(peers);
+	if (peer != NULL) {
+		memb_free(&peer_memb, peer);
+	}
+}
+
+bool nanotorrent_swarm_add_peer(nanotorrent_peer_info_t peer_info) {
+	// Allocate peer
+	nanotorrent_swarm_peer_t *peer;
+	peer = memb_alloc(&peer_memb);
+	if (peer == NULL) {
+		return false;
+	}
+	// Add to list
+	peer->peer_info = peer_info;
+	list_push(peers, peer);
+	return true;
 }
 
 void nanotorrent_swarm_announce_send(nanotracker_announce_event_t event) {
@@ -290,15 +324,14 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 	}
 
 	// Replace peers
-	nanotorrent_peer_info_t *peer;
+	nanotorrent_peer_info_t peer_info;
 	size_t i;
 	nanotorrent_swarm_clear_peers();
 	for (i = 0; i < reply.num_peers; i++) {
-		peer = memb_alloc(&peer_memb);
-		if (peer == NULL) {
+		data = nanotorrent_unpack_peer_info(data, &peer_info);
+		if (!nanotorrent_swarm_add_peer(peer_info)) {
 			break;
 		}
-		data = nanotorrent_unpack_peer_info(data, peer);
 	}
 
 	// Stop retrying

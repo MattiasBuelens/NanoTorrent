@@ -104,7 +104,7 @@ bool nanotorrent_swarm_is_joining();
 bool nanotorrent_swarm_is_joined();
 
 nanotorrent_peer_info_t *nanotorrent_swarm_peek_peer();
-nanotorrent_peer_info_t *nanotorrent_swarm_pop_peer();
+void nanotorrent_swarm_pop_peer();
 
 void nanotorrent_swarm_join();
 void nanotorrent_swarm_leave();
