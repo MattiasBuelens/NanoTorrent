@@ -100,14 +100,6 @@ nanotorrent_peer_conn_t *nanotorrent_peer_find(
 	return NULL;
 }
 
-nanotorrent_peer_conn_t *nanotorrent_peer_allocate_out() {
-	return memb_alloc(&peers_out);
-}
-
-nanotorrent_peer_conn_t *nanotorrent_peer_allocate_in() {
-	return memb_alloc(&peers_in);
-}
-
 void nanotorrent_peer_free(nanotorrent_peer_conn_t *conn) {
 	if (memb_inmemb(&peers_in, conn)) {
 		memb_free(&peers_in, conn);
