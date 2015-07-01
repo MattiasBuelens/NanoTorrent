@@ -590,9 +590,14 @@ void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 	nanotorrent_peer_conn_t *conn;
 	conn = nanotorrent_peer_accept(&peer);
 	if (conn == NULL) {
-		WARN("Cannot accept peer");
-		PRINT6ADDR(&peer.peer_ip);
-		PRINTF("\n");
+		// Don't notify when targeted with multicast
+		if (!uip_is_addr_mcast(dest_addr)) {
+			WARN("Cannot accept peer connection from ");
+			PRINT6ADDR(&peer.peer_ip);
+			PRINTF("\n");
+			// Send close notification
+			nanotorrent_peer_send_close(&peer);
+		}
 		return;
 	}
 
