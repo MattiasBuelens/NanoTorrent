@@ -66,13 +66,13 @@ void nanotorrent_peer_init() {
 	list_init(peers);
 	memb_init(&peers_in);
 	memb_init(&peers_out);
-	// Start heartbeat
-	etimer_set(&heartbeat, NANOTORRENT_PEER_HEARTBEAT_PERIOD);
 	// Register peer socket
 	udp_socket_close(&peer_socket);
 	udp_socket_register(&peer_socket, NULL, nanotorrent_peer_handle_message);
 	udp_socket_bind(&peer_socket, NANOTORRENT_PEER_PORT);
 	PRINTF("Listening for peers on port %u\n", NANOTORRENT_PEER_PORT);
+	// Send first heartbeat immediately
+	etimer_set(&heartbeat, 0);
 }
 
 void nanotorrent_peer_shutdown() {
@@ -649,7 +649,7 @@ PROCESS_THREAD(nanotorrent_peer_process, ev, data) {
 				nanotorrent_peer_send_have_local_multicast();
 #endif
 				// Schedule next heartbeat
-				etimer_reset(&heartbeat);
+				etimer_set(&heartbeat, NANOTORRENT_PEER_HEARTBEAT_PERIOD);
 			}
 
 			// Wait for timer event
