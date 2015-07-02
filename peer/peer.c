@@ -321,12 +321,12 @@ bool nanotorrent_peer_request_next(nanotorrent_peer_conn_t *conn) {
 	return true;
 }
 
-bool nanotorrent_peer_should_receive_data(const nanotorrent_peer_info_t *peer,
+nanotorrent_peer_conn_t *nanotorrent_peer_data_receiver(const nanotorrent_peer_info_t *peer,
 		uint8_t piece_index, uint16_t data_offset, uint16_t data_length) {
 	nanotorrent_peer_conn_t *conn;
 	// Ignore if we already have piece
 	if (nanotorrent_piece_is_complete(piece_index)) {
-		return false;
+		return NULL;
 	}
 	// Requesting this piece?
 	if (nanotorrent_peer_has_request(piece_index)) {
@@ -335,7 +335,7 @@ bool nanotorrent_peer_should_receive_data(const nanotorrent_peer_info_t *peer,
 		if (data_offset <= conn->request_offset
 				&& conn->request_offset < data_offset + data_length) {
 			// Data valid for current request
-			return true;
+			return conn;
 		}
 	}
 #if NANOTORRENT_LOCAL
@@ -344,35 +344,28 @@ bool nanotorrent_peer_should_receive_data(const nanotorrent_peer_info_t *peer,
 		// other peer, but we are not yet requesting that piece.
 		// Try to add a request so we can receive the data ourselves
 		// instead of having to make a new request later on.
-		nanotorrent_peer_conn_t *conn;
 		conn = nanotorrent_peer_connect(peer);
 		if (conn == NULL) {
 			// Cannot connect
-			return false;
+			return NULL;
 		}
 		if (conn->has_request) {
 			// Peer already handling other request
-			return false;
+			return NULL;
 		}
 		// Create request
-		// Will be handled in nanotorrent_peer_data_received
+		// Will be handled by nanotorrent_peer_receive_data
 		conn->request_index = piece_index;
 		conn->request_offset = data_offset;
 		nanotorrent_peer_request_init(conn);
-		return true;
+		return conn;
 	}
 #endif /* NANOTORRENT_LOCAL */
-	return false;
+	return NULL;
 }
 
-void nanotorrent_peer_data_received(const nanotorrent_peer_info_t *peer,
+void nanotorrent_peer_receive_data(nanotorrent_peer_conn_t *conn,
 		uint8_t piece_index, uint16_t data_offset, uint16_t data_length) {
-	nanotorrent_peer_conn_t *conn;
-	conn = nanotorrent_peer_find_request(peer, piece_index);
-	if (conn == NULL) {
-		ERROR("Expected peer request for piece %u", piece_index);
-		return;
-	}
 	// Is piece completed?
 	uint16_t piece_size = nanotorrent_piece_size(piece_index);
 	uint16_t next_offset = data_offset + data_length;
@@ -576,9 +569,11 @@ void nanotorrent_peer_handle_data_reply(const uint8_t *buffer,
 		return;
 	}
 
-	// Check if we are interested in this data
-	if (!nanotorrent_peer_should_receive_data(peer, reply.piece_index,
-			reply.data_start, data_length)) {
+	// Find a receiving connection
+	nanotorrent_peer_conn_t *conn;
+	conn = nanotorrent_peer_data_receiver(peer, reply.piece_index,
+			reply.data_start, data_length);
+	if (conn == NULL) {
 		return;
 	}
 
@@ -590,7 +585,7 @@ void nanotorrent_peer_handle_data_reply(const uint8_t *buffer,
 	}
 
 	// Handle receipt
-	nanotorrent_peer_data_received(peer, reply.piece_index, reply.data_start,
+	nanotorrent_peer_receive_data(conn, reply.piece_index, reply.data_start,
 			written);
 }
 
