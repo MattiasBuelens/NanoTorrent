@@ -24,8 +24,9 @@ void nanotorrent_retry_next(nanotorrent_retry_t *retry) {
 		// Try again
 		retry->num_retries++;
 		retry->callback(RETRY_AGAIN, retry->data);
-	} else {
+	} else if (retry->num_retries == retry->max_retries) {
 		// Stop retrying
+		retry->num_retries++;
 		nanotorrent_retry_stop(retry);
 		retry->callback(RETRY_STOP, retry->data);
 	}
