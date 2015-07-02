@@ -300,7 +300,7 @@ void nanotorrent_peer_request_stop_all(uint8_t piece_index) {
 			nanotorrent_peer_request_stop_partial(conn);
 		}
 	}
-	nanotorrent_bitset_clear(pending_pieces, conn->request_index);
+	nanotorrent_bitset_clear(pending_pieces, piece_index);
 }
 
 bool nanotorrent_peer_request_next(nanotorrent_peer_conn_t *conn) {
