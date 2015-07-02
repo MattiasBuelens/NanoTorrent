@@ -21,16 +21,12 @@ void nanotorrent_retry_next(nanotorrent_retry_t *retry) {
 		// Use exponential back-off for next timeout
 		clock_time_t timeout = retry->timeout * (1 << retry->num_retries);
 		etimer_set(&retry->timer, timeout);
-	} else {
-		// Stop
-		nanotorrent_retry_stop(retry);
-	}
-	if (retry->num_retries <= retry->max_retries) {
 		// Try again
 		retry->num_retries++;
 		retry->callback(RETRY_AGAIN, retry->data);
 	} else {
 		// Stop retrying
+		nanotorrent_retry_stop(retry);
 		retry->callback(RETRY_STOP, retry->data);
 	}
 }
