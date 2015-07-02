@@ -231,7 +231,8 @@ bool nanotorrent_peer_has_request(uint8_t piece_index) {
 	return nanotorrent_bitset_get(pending_pieces, piece_index);
 }
 
-nanotorrent_peer_conn_t *nanotorrent_peer_find_request(uint8_t piece_index) {
+nanotorrent_peer_conn_t *nanotorrent_peer_find_first_request(
+		uint8_t piece_index) {
 	nanotorrent_peer_conn_t *conn;
 	for (conn = list_head(peers); conn != NULL; conn = list_item_next(conn)) {
 		if (conn->has_request && conn->request_index == piece_index) {
@@ -239,6 +240,23 @@ nanotorrent_peer_conn_t *nanotorrent_peer_find_request(uint8_t piece_index) {
 		}
 	}
 	return NULL;
+}
+
+nanotorrent_peer_conn_t *nanotorrent_peer_find_request(
+		const nanotorrent_peer_info_t *peer, uint8_t piece_index) {
+	nanotorrent_peer_conn_t *conn, *first_match = NULL;
+	for (conn = list_head(peers); conn != NULL; conn = list_item_next(conn)) {
+		if (conn->has_request && conn->request_index == piece_index) {
+			if (nanotorrent_peer_info_cmp(&conn->peer_info, peer)) {
+				// Exact match
+				return conn;
+			} else if (first_match == NULL) {
+				// First match
+				first_match = conn;
+			}
+		}
+	}
+	return first_match;
 }
 
 void nanotorrent_peer_request_init(nanotorrent_peer_conn_t *conn) {
@@ -252,10 +270,37 @@ void nanotorrent_peer_request_start(nanotorrent_peer_conn_t *conn) {
 			(NANOTORRENT_MAX_PEER_RETRIES), conn);
 }
 
-void nanotorrent_peer_request_stop(nanotorrent_peer_conn_t *conn) {
+void nanotorrent_peer_request_stop_partial(nanotorrent_peer_conn_t *conn) {
 	conn->has_request = false;
-	nanotorrent_bitset_clear(pending_pieces, conn->request_index);
 	nanotorrent_retry_stop(&conn->request_retry);
+}
+
+void nanotorrent_peer_request_stop(nanotorrent_peer_conn_t *conn) {
+	bool had_request = conn->has_request;
+	uint8_t request_index = request_index;
+
+	nanotorrent_peer_request_stop_partial(conn);
+	if (!had_request) {
+		return;
+	}
+
+	if (nanotorrent_peer_find_first_request(request_index) != NULL) {
+		// Still requesting from other peer
+		nanotorrent_bitset_set(pending_pieces, request_index);
+	} else {
+		// No longer requesting from any other peer
+		nanotorrent_bitset_clear(pending_pieces, request_index);
+	}
+}
+
+void nanotorrent_peer_request_stop_all(uint8_t piece_index) {
+	nanotorrent_peer_conn_t *conn;
+	for (conn = list_head(peers); conn != NULL; conn = list_item_next(conn)) {
+		if (conn->has_request && conn->request_index == piece_index) {
+			nanotorrent_peer_request_stop_partial(conn);
+		}
+	}
+	nanotorrent_bitset_clear(pending_pieces, conn->request_index);
 }
 
 bool nanotorrent_peer_request_next(nanotorrent_peer_conn_t *conn) {
@@ -285,7 +330,7 @@ bool nanotorrent_peer_should_receive_data(const nanotorrent_peer_info_t *peer,
 	}
 	// Requesting this piece?
 	if (nanotorrent_peer_has_request(piece_index)) {
-		conn = nanotorrent_peer_find_request(piece_index);
+		conn = nanotorrent_peer_find_request(peer, piece_index);
 		// Data in range of current request?
 		if (data_offset <= conn->request_offset
 				&& conn->request_offset < data_offset + data_length) {
@@ -323,7 +368,7 @@ bool nanotorrent_peer_should_receive_data(const nanotorrent_peer_info_t *peer,
 void nanotorrent_peer_data_received(const nanotorrent_peer_info_t *peer,
 		uint8_t piece_index, uint16_t data_offset, uint16_t data_length) {
 	nanotorrent_peer_conn_t *conn;
-	conn = nanotorrent_peer_find_request(piece_index);
+	conn = nanotorrent_peer_find_request(peer, piece_index);
 	if (conn == NULL) {
 		ERROR("Expected peer request for piece %u", piece_index);
 		return;
@@ -345,6 +390,8 @@ void nanotorrent_peer_data_received(const nanotorrent_peer_info_t *peer,
 		if (is_complete) {
 			// Piece completed
 			NOTE("Piece %u completed", piece_index);
+			// Cancel other requests for same piece
+			nanotorrent_peer_request_stop_all(piece_index);
 			// Notify piece complete
 			nanotorrent_peer_post_event();
 		} else {
