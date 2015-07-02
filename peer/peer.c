@@ -70,7 +70,7 @@ void nanotorrent_peer_init() {
 	udp_socket_close(&peer_socket);
 	udp_socket_register(&peer_socket, NULL, nanotorrent_peer_handle_message);
 	udp_socket_bind(&peer_socket, NANOTORRENT_PEER_PORT);
-	PRINTF("Listening for peers on port %u\n", NANOTORRENT_PEER_PORT);
+	NOTE("Listening for peers on port %u", NANOTORRENT_PEER_PORT);
 	// Send first heartbeat immediately
 	etimer_set(&heartbeat, 0);
 }
@@ -316,6 +316,9 @@ bool nanotorrent_peer_request_next(nanotorrent_peer_conn_t *conn) {
 	if (!nanotorrent_select_next(conn, &conn->request_index)) {
 		return false;
 	}
+	NOTE("Request piece %u from ", conn->request_index);
+	uip_debug_ipaddr_print(&conn->peer_info.peer_ip);
+	PRINTF("\n");
 	conn->request_offset = 0;
 	nanotorrent_peer_request_start(conn);
 	return true;
