@@ -114,6 +114,9 @@ void nanotorrent_peer_add(nanotorrent_peer_conn_t *conn) {
 	;
 
 	// Initialize
+	PRINTF("Add peer ");
+	uip_debug_ipaddr_print(&conn->peer_info.peer_ip);
+	PRINTF("\n");
 	conn->have = 0;
 	conn->has_request = false;
 	nanotorrent_retry_init(&conn->request_retry,
@@ -316,7 +319,7 @@ bool nanotorrent_peer_request_next(nanotorrent_peer_conn_t *conn) {
 	if (!nanotorrent_select_next(conn, &conn->request_index)) {
 		return false;
 	}
-	NOTE("Request piece %u from ", conn->request_index);
+	PRINTF("Request piece %u from ", conn->request_index);
 	uip_debug_ipaddr_print(&conn->peer_info.peer_ip);
 	PRINTF("\n");
 	conn->request_offset = 0;
