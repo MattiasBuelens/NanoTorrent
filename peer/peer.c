@@ -45,8 +45,8 @@ void nanotorrent_peer_send_close(const nanotorrent_peer_info_t *peer);
 void nanotorrent_peer_send_data_request(const nanotorrent_peer_info_t *peer,
 		uint8_t piece_index, uint16_t data_start);
 
-void nanotorrent_peer_handle_request_retry(nanotorrent_retry_event_t event,
-		void *data);
+nanotorrent_retry_callback_t nanotorrent_peer_request_retry_again;
+nanotorrent_retry_callback_t nanotorrent_peer_request_retry_stop;
 
 void nanotorrent_peer_handle_message(struct udp_socket *peer_socket, void *ptr,
 		const uip_ipaddr_t *src_addr, uint16_t src_port,
@@ -121,7 +121,8 @@ void nanotorrent_peer_add(nanotorrent_peer_conn_t *conn) {
 	conn->has_request = false;
 	nanotorrent_retry_init(&conn->request_retry,
 			(NANOTORRENT_PEER_RETRY_TIMEOUT),
-			nanotorrent_peer_handle_request_retry);
+			nanotorrent_peer_request_retry_again,
+			nanotorrent_peer_request_retry_stop);
 	// Start heartbeat
 	etimer_set(&conn->heartbeat, NANOTORRENT_PEER_HEARTBEAT_TIMEOUT);
 	// Add to peers list
@@ -400,27 +401,26 @@ void nanotorrent_peer_receive_data(nanotorrent_peer_conn_t *conn,
 	}
 }
 
-void nanotorrent_peer_handle_request_retry(nanotorrent_retry_event_t event,
-		void *data) {
+void nanotorrent_peer_request_retry_again(void *data) {
 	nanotorrent_peer_conn_t *conn = data;
 	if (!conn->has_request)
 		return;
 
-	switch (event) {
-	case RETRY_AGAIN:
-		// Try again
-		// Send piece request
-		nanotorrent_peer_send_data_request(&conn->peer_info,
-				conn->request_index, conn->request_offset);
-		break;
-	case RETRY_STOP:
-		// Stopped retrying
-		// Cancel request
-		nanotorrent_peer_request_stop(conn);
-		// Request next piece
-		nanotorrent_peer_request_next(conn);
-		break;
-	}
+	// Try again
+	// Send piece request
+	nanotorrent_peer_send_data_request(&conn->peer_info, conn->request_index,
+			conn->request_offset);
+}
+
+void nanotorrent_peer_request_retry_stop(void *data) {
+	nanotorrent_peer_conn_t *conn = data;
+	if (!conn->has_request)
+		return;
+	// Stopped retrying
+	// Cancel request
+	nanotorrent_peer_request_stop(conn);
+	// Request next piece
+	nanotorrent_peer_request_next(conn);
 }
 
 void nanotorrent_peer_send_message(const uint8_t *buffer,

@@ -8,9 +8,11 @@
 #include "retry.h"
 
 void nanotorrent_retry_init(nanotorrent_retry_t *retry, clock_time_t timeout,
-		nanotorrent_retry_callback_t callback) {
+		nanotorrent_retry_callback_t *again_callback,
+		nanotorrent_retry_callback_t *stop_callback) {
 	retry->timeout = timeout;
-	retry->callback = callback;
+	retry->again_callback = again_callback;
+	retry->stop_callback = stop_callback;
 	retry->num_retries = 0;
 	retry->max_retries = 0;
 	nanotorrent_retry_stop(retry);
@@ -23,12 +25,12 @@ void nanotorrent_retry_next(nanotorrent_retry_t *retry) {
 		etimer_set(&retry->timer, timeout);
 		// Try again
 		retry->num_retries++;
-		retry->callback(RETRY_AGAIN, retry->data);
+		retry->again_callback(retry->data);
 	} else if (retry->num_retries == retry->max_retries) {
 		// Stop retrying
 		retry->num_retries++;
 		nanotorrent_retry_stop(retry);
-		retry->callback(RETRY_STOP, retry->data);
+		retry->stop_callback(retry->data);
 	}
 }
 

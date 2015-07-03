@@ -71,8 +71,9 @@ void nanotorrent_swarm_handle_reply(struct udp_socket *tracker_socket,
 		uint16_t datalen);
 
 void nanotorrent_swarm_leave_quiet();
-void nanotorrent_swarm_announce_retry(nanotorrent_retry_event_t event,
-		void *data);
+
+nanotorrent_retry_callback_t nanotorrent_swarm_announce_retry_again;
+nanotorrent_retry_callback_t nanotorrent_swarm_announce_retry_stop;
 
 void nanotorrent_swarm_start() {
 	process_start(&nanotorrent_swarm_process, NULL);
@@ -85,7 +86,8 @@ void nanotorrent_swarm_stop() {
 void nanotorrent_swarm_init() {
 	// Initialize announce retrying
 	nanotorrent_retry_init(&announce_retry, NANOTORRENT_ANNOUNCE_RETRY_TIMEOUT,
-			nanotorrent_swarm_announce_retry);
+			nanotorrent_swarm_announce_retry_again,
+			nanotorrent_swarm_announce_retry_stop);
 	// Initialize state
 	nanotorrent_swarm_leave_quiet();
 	swarm_state = NANOTORRENT_SWARM_INIT;
@@ -198,29 +200,25 @@ nanotracker_announce_event_t nanotorrent_swarm_announce_stop() {
 	return old_event;
 }
 
-void nanotorrent_swarm_announce_retry(nanotorrent_retry_event_t event,
-		void *data) {
-	switch (event) {
-	case RETRY_AGAIN:
-		// Try again
-		nanotorrent_swarm_announce_send(announce_retry_event);
+void nanotorrent_swarm_announce_retry_again(void *data) {
+	// Try again
+	nanotorrent_swarm_announce_send(announce_retry_event);
+}
+
+void nanotorrent_swarm_announce_retry_stop(void *data) {
+	// Stopped retrying
+	switch (announce_retry_event) {
+	case NANOTRACKER_ANNOUNCE_STARTED:
+		ERROR("Failed to join swarm");
 		break;
-	case RETRY_STOP:
-		// Stopped retrying
-		switch (announce_retry_event) {
-		case NANOTRACKER_ANNOUNCE_STARTED:
-			ERROR("Failed to join swarm");
-			break;
-		case NANOTRACKER_ANNOUNCE_REFRESH:
-			WARN("Failed to refresh swarm");
-			break;
-		default:
-			break;
-		}
-		// Force leave
-		nanotorrent_swarm_force_leave();
+	case NANOTRACKER_ANNOUNCE_REFRESH:
+		WARN("Failed to refresh swarm");
+		break;
+	default:
 		break;
 	}
+	// Force leave
+	nanotorrent_swarm_force_leave();
 }
 
 #define nanotorrent_swarm_post_event() \

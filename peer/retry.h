@@ -10,12 +10,7 @@
 
 #include "common.h"
 
-typedef enum nanotorrent_retry_event {
-	RETRY_AGAIN, RETRY_STOP
-} nanotorrent_retry_event_t;
-
-typedef void (*nanotorrent_retry_callback_t)(nanotorrent_retry_event_t event,
-		void *data);
+typedef void nanotorrent_retry_callback_t(void *data);
 
 typedef struct nanotorrent_retry {
 	/**
@@ -35,9 +30,13 @@ typedef struct nanotorrent_retry {
 	 */
 	struct etimer timer;
 	/**
-	 * Callback
+	 * Retry again callback
 	 */
-	nanotorrent_retry_callback_t callback;
+	nanotorrent_retry_callback_t *again_callback;
+	/**
+	 * Stopped retrying callback
+	 */
+	nanotorrent_retry_callback_t *stop_callback;
 	/**
 	 * Callback data
 	 */
@@ -45,7 +44,8 @@ typedef struct nanotorrent_retry {
 } nanotorrent_retry_t;
 
 void nanotorrent_retry_init(nanotorrent_retry_t *retry, clock_time_t timeout,
-		nanotorrent_retry_callback_t callback);
+		nanotorrent_retry_callback_t *again_callback,
+		nanotorrent_retry_callback_t *stop_callback);
 void nanotorrent_retry_start(nanotorrent_retry_t *retry, uint8_t max_retries,
 		void *data);
 void nanotorrent_retry_stop(nanotorrent_retry_t *retry);
