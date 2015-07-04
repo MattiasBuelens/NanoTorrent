@@ -78,12 +78,12 @@
 /**
  * Base timeout for retrying a peer data request
  */
-#define NANOTORRENT_PEER_RETRY_TIMEOUT (5ul * CLOCK_SECOND)
+#define NANOTORRENT_PEER_RETRY_TIMEOUT (1ul * CLOCK_SECOND)
 
 /**
  * Time between two heartbeats to connected peers
  */
-#define NANOTORRENT_PEER_HEARTBEAT_PERIOD (30ul * CLOCK_SECOND)
+#define NANOTORRENT_PEER_HEARTBEAT_PERIOD (15ul * CLOCK_SECOND)
 
 /**
  * Timeout for a heartbeat to be expired
