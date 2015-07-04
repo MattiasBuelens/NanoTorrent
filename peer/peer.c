@@ -700,6 +700,7 @@ PROCESS_THREAD(nanotorrent_peer_process, ev, data) {
 			}
 
 			if (etimer_expired(&heartbeat)) {
+				NOTE("Sending heartbeat: %08x", nanotorrent_piece_have());
 #if NANOTORRENT_LOCAL
 				// Send local multicast heartbeat
 				nanotorrent_peer_send_have_local_multicast();
