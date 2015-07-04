@@ -15,6 +15,7 @@ void nanotorrent_retry_init(nanotorrent_retry_t *retry, clock_time_t timeout,
 	retry->stop_callback = stop_callback;
 	retry->num_retries = 0;
 	retry->max_retries = 0;
+	retry->data = NULL;
 	nanotorrent_retry_stop(retry);
 }
 
@@ -46,8 +47,6 @@ void nanotorrent_retry_start(nanotorrent_retry_t *retry, uint8_t max_retries,
 }
 
 void nanotorrent_retry_stop(nanotorrent_retry_t *retry) {
-	// Reset
-	retry->data = NULL;
 	// Stop timer
 	etimer_stop(&retry->timer);
 }
