@@ -40,6 +40,7 @@ static struct udp_socket peer_socket;
  * Periodic heartbeat timer
  */
 static struct etimer heartbeat;
+static clock_time_t heartbeat_delay;
 
 void nanotorrent_peer_send_close(const nanotorrent_peer_info_t *peer);
 void nanotorrent_peer_send_data_request(const nanotorrent_peer_info_t *peer,
@@ -71,8 +72,9 @@ void nanotorrent_peer_init() {
 	udp_socket_register(&peer_socket, NULL, nanotorrent_peer_handle_message);
 	udp_socket_bind(&peer_socket, NANOTORRENT_PEER_PORT);
 	NOTE("Listening for peers on port %u", NANOTORRENT_PEER_PORT);
-	// Send first heartbeat immediately
-	etimer_set(&heartbeat, 0);
+	// Reset heartbeat
+	heartbeat_delay = NANOTORRENT_PEER_HEARTBEAT_PERIOD;
+	etimer_stop(&heartbeat);
 }
 
 void nanotorrent_peer_shutdown() {
@@ -392,6 +394,9 @@ void nanotorrent_peer_receive_data(nanotorrent_peer_conn_t *conn,
 			NOTE("Piece %u completed", piece_index);
 			// Cancel other requests for same piece
 			nanotorrent_peer_request_stop_all(piece_index);
+			// Speed up next heartbeat
+			heartbeat_delay /= 2;
+			etimer_adjust(&heartbeat, -(int) heartbeat_delay);
 			// Notify piece complete
 			nanotorrent_peer_post_event();
 		} else {
@@ -668,6 +673,9 @@ PROCESS_THREAD(nanotorrent_peer_process, ev, data) {
 		nanotorrent_peer_event = process_alloc_event();
 		nanotorrent_peer_init();
 
+		// Schedule first heartbeat immediately
+		etimer_set(&heartbeat, 0);
+
 		while (true) {
 			nanotorrent_peer_conn_t *conn, *next_conn;
 			for (conn = list_head(peers); conn != NULL; conn = next_conn) {
@@ -697,7 +705,8 @@ PROCESS_THREAD(nanotorrent_peer_process, ev, data) {
 				nanotorrent_peer_send_have_local_multicast();
 #endif
 				// Schedule next heartbeat
-				etimer_set(&heartbeat, NANOTORRENT_PEER_HEARTBEAT_PERIOD);
+				heartbeat_delay = NANOTORRENT_PEER_HEARTBEAT_PERIOD;
+				etimer_set(&heartbeat, heartbeat_delay);
 			}
 
 			// Wait for timer event
