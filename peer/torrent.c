@@ -37,7 +37,7 @@ bool nanotorrent_torrent_info_create(nanotorrent_torrent_info_t *info,
 	int32_t piece_length = 0;
 	do {
 		// Digest piece
-		sha1_init(&context);
+		sha1_reset(&context);
 		piece_length = nanotorrent_piece_digest(&context, file, piece_size);
 		if (piece_length < 0) {
 			// Error

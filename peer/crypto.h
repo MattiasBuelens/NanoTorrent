@@ -27,7 +27,7 @@ typedef struct sha1_digest {
 void sha1_print(const sha1_digest_t *digest);
 void sha1_write(char *buffer, const sha1_digest_t *digest);
 
-void sha1_init(sha1_context_t *context);
+void sha1_reset(sha1_context_t *context);
 bool sha1_add(sha1_context_t *context, const uint8_t *src, const size_t len);
 bool sha1_result(sha1_context_t *context, sha1_digest_t *dest);
 

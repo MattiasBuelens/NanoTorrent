@@ -216,7 +216,7 @@ bool nanotorrent_piece_verify(sha1_context_t *context,
 	}
 	// Calculate piece digest
 	sha1_digest_t digest;
-	sha1_init(context);
+	sha1_reset(context);
 	int32_t piece_length = nanotorrent_piece_digest(context, file, size);
 	if (piece_length < 0) {
 		return false;

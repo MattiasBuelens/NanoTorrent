@@ -8,7 +8,7 @@
 #include "common.h"
 #include "crypto-impl.h"
 
-void sha1_init(sha1_context_t *context) {
+void sha1_reset(sha1_context_t *context) {
 	SHA1Reset(context);
 }
 
@@ -22,7 +22,7 @@ bool sha1_result(sha1_context_t *context, sha1_digest_t *dest) {
 
 bool sha1_compute(const uint8_t *src, const size_t len, sha1_digest_t *dest) {
 	SHA1Context context;
-	sha1_init(&context);
+	sha1_reset(&context);
 	sha1_add(&context, src, len);
 	return sha1_result(&context, dest);
 }
