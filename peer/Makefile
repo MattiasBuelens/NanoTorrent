@@ -7,7 +7,7 @@ PROJECT_SOURCEFILES += nanotorrent.c retry.c swarm.c peer.c piece.c piece-select
 PROJECT_SOURCEFILES += fs.c
 
 PROJECT_SOURCEFILES += crypto.c
-PROJECTDIRS += crypto/ref
+PROJECTDIRS += crypto/avr
 PROJECT_SOURCEFILES += crypto-impl.c sha1.c
 
 PROJECTDIRS += pack

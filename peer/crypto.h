@@ -9,7 +9,7 @@
 #define NANOTORRENT_CRYPTO_H_
 
 #include "common.h"
-#include "crypto/ref/crypto-impl.h"
+#include "crypto/avr/crypto-impl.h"
 
 #define SHA1_HASH_SIZE 20
 
