@@ -27,17 +27,27 @@
 
 #include <string.h> /* memcpy & co */
 #include <stdint.h>
-#include "config.h"
-#include "debug.h"
+#include "common.h"
+//#include "config.h"
+//#include "debug.h"
 #include "sha1.h"
 
 #ifdef DEBUG
 #  undef DEBUG
 #endif
 
-#include "cli.h"
+#define DEBUG_S(...)
+#define DEBUG_B(...)
+#define DEBUG_C(...)
 
-#define LITTLE_ENDIAN
+//#include "cli.h"
+
+#ifndef LITTLE_ENDIAN
+#define LITTLE_ENDIAN (UIP_BYTE_ORDER == UIP_LITTLE_ENDIAN)
+#endif
+#ifndef BIG_ENDIAN
+#define BIG_ENDIAN (UIP_BYTE_ORDER == UIP_BIG_ENDIAN)
+#endif
 
 /********************************************************************************************************/
 
