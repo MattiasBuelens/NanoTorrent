@@ -19,10 +19,3 @@ bool sha1_add(sha1_context_t *context, const uint8_t *src, const size_t len) {
 bool sha1_result(sha1_context_t *context, sha1_digest_t *dest) {
 	return SHA1Result(context, dest->bytes) == 0;
 }
-
-bool sha1_compute(const uint8_t *src, const size_t len, sha1_digest_t *dest) {
-	SHA1Context context;
-	sha1_reset(&context);
-	sha1_add(&context, src, len);
-	return sha1_result(&context, dest);
-}

@@ -21,3 +21,10 @@ void sha1_write(char *buffer, const sha1_digest_t *digest) {
 	}
 	buffer[2 * SHA1_HASH_SIZE] = 0;
 }
+
+bool sha1_compute(const uint8_t *src, const size_t len, sha1_digest_t *dest) {
+	sha1_context_t context;
+	sha1_reset(&context);
+	sha1_add(&context, src, len);
+	return sha1_result(&context, dest);
+}
