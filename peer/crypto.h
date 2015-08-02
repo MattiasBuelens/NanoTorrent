@@ -9,19 +9,16 @@
 #define NANOTORRENT_CRYPTO_H_
 
 #include "common.h"
-#include "crypto/ref/sha1.h"
+#include "crypto/ref/crypto-impl.h"
+
+#define SHA1_HASH_SIZE 20
 
 /*
  * SHA1 digest
  */
 typedef struct sha1_digest {
-	uint8_t bytes[SHA1HashSize];
+	uint8_t bytes[SHA1_HASH_SIZE];
 } sha1_digest_t;
-
-/*
- * SHA1 context
- */
-typedef SHA1Context sha1_context_t;
 
 #define sha1_cmp(left, right) (memcmp(left, right, sizeof(sha1_digest_t)) == 0)
 

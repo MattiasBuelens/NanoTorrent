@@ -9,34 +9,15 @@
 
 void sha1_print(const sha1_digest_t *digest) {
 	int i;
-	for (i = 0; i < SHA1HashSize; i++) {
+	for (i = 0; i < SHA1_HASH_SIZE; i++) {
 		PRINTF("%02x", digest->bytes[i]);
 	}
 }
 
 void sha1_write(char *buffer, const sha1_digest_t *digest) {
 	int i;
-	for (i = 0; i < SHA1HashSize; i++) {
+	for (i = 0; i < SHA1_HASH_SIZE; i++) {
 		sprintf(&buffer[2 * i], "%02x", digest->bytes[i]);
 	}
-	buffer[2 * SHA1HashSize] = 0;
-}
-
-void sha1_init(sha1_context_t *context) {
-	SHA1Reset(context);
-}
-
-bool sha1_add(sha1_context_t *context, const uint8_t *src, const size_t len) {
-	return SHA1Input(context, src, len) == 0;
-}
-
-bool sha1_result(sha1_context_t *context, sha1_digest_t *dest) {
-	return SHA1Result(context, dest->bytes) == 0;
-}
-
-bool sha1_compute(const uint8_t *src, const size_t len, sha1_digest_t *dest) {
-	SHA1Context context;
-	sha1_init(&context);
-	sha1_add(&context, src, len);
-	return sha1_result(&context, dest);
+	buffer[2 * SHA1_HASH_SIZE] = 0;
 }

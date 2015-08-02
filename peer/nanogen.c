@@ -154,11 +154,11 @@ int main(int argc, char **argv) {
 		// Calculate torrent info hash
 		sha1_digest_t info_hash;
 		nanotorrent_torrent_info_hash(&desc.info, &info_hash);
-		char info_hash_string[2 * SHA1HashSize + 1];
+		char info_hash_string[2 * SHA1_HASH_SIZE + 1];
 		sha1_write(info_hash_string, &info_hash);
 		// Generate destination name
 		strcpy(&dest_gen_name[0], info_hash_string);
-		strcpy(&dest_gen_name[2 * SHA1HashSize], ".nanotorrent");
+		strcpy(&dest_gen_name[2 * SHA1_HASH_SIZE], ".nanotorrent");
 		dest_name = dest_gen_name;
 	}
 	rename(out_name, dest_name);

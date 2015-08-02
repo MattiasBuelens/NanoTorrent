@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 	// Calculate torrent info hash
 	sha1_digest_t info_hash;
 	nanotorrent_torrent_info_hash(&desc.info, &info_hash);
-	char info_hash_string[2 * SHA1HashSize + 1];
+	char info_hash_string[2 * SHA1_HASH_SIZE + 1];
 	sha1_write(info_hash_string, &info_hash);
 
 	// Print information
