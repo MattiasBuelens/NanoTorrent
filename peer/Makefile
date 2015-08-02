@@ -6,7 +6,7 @@ CONTIKI = ../contiki
 PROJECT_SOURCEFILES += nanotorrent.c retry.c swarm.c peer.c piece.c piece-select.c torrent.c bitset.c
 PROJECT_SOURCEFILES += fs.c
 
-PROJECTDIRS += crypto
+PROJECTDIRS += crypto/ref
 PROJECT_SOURCEFILES += crypto.c sha1.c
 
 PROJECTDIRS += pack

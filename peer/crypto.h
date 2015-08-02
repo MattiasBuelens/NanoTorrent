@@ -9,7 +9,7 @@
 #define NANOTORRENT_CRYPTO_H_
 
 #include "common.h"
-#include "crypto/sha1.h"
+#include "crypto/ref/sha1.h"
 
 /*
  * SHA1 digest
