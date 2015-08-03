@@ -8,7 +8,7 @@
 #ifndef NANOTORRENT_CRYPTO_IMPL_H_
 #define NANOTORRENT_CRYPTO_IMPL_H_
 
-#include "sha.h"
+#include "crypto/ref/sha.h"
 
 /*
  * SHA1 context

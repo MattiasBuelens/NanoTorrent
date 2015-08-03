@@ -6,7 +6,7 @@
  */
 
 #include "common.h"
-#include "crypto-impl.h"
+#include "crypto/avr/crypto-impl.h"
 
 void sha1_reset(sha1_context_t *context) {
 	sha1_init(&context->state);
