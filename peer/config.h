@@ -28,6 +28,32 @@
 #define NANOTORRENT_LOCAL 1
 
 /**
+ * Use the interface identifier (IID) of a peer's
+ * IPv6 address as the peer's identifier.
+ *
+ * By default, peers are identified by their IPv6 address.
+ * However, this may cause TWO connections to be created
+ * for a single local peer:
+ * - One connection uses the peer's global unicast address
+ *   as reported by the tracker
+ * - One connection uses the peer's link-local address
+ *   as discovered with link-local multicast
+ *
+ * To prevent overloading local peers with doubled connections,
+ * we can use the 64-bit IID as a 'supercookie' to identify
+ * a peer across multiple networks IF the peer uses the same
+ * IID for both its global unicast and link-local addresses.
+ *
+ * This assumption holds if peers only use addresses derived
+ * from their MAC addresses through stateless address
+ * auto-configuration. When peers use a temporary address
+ * (generated locally or obtained through DHCP), the IIDs of
+ * both addresses no longer match up and accidental IID
+ * collisions may occur between two distinct peers.
+ */
+#define NANOTORRENT_IID_AS_PEER_ID 1
+
+/**
  * Minimum completion before allowing end-game mode
  *
  * Completion is number of completed pieces

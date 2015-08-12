@@ -22,8 +22,13 @@ typedef struct nanotorrent_peer_info {
 	uip_ip6addr_t peer_ip;
 } nanotorrent_peer_info_t;
 
+#if NANOTORRENT_IID_AS_PEER_ID
+#define nanotorrent_peer_info_cmp(a, b) \
+	(memcmp(&(a)->peer_ip.u8[8], &(b)->peer_ip.u8[8], 8) == 0)
+#else
 #define nanotorrent_peer_info_cmp(a, b) \
 	(uip_ip6addr_cmp(&(a)->peer_ip, &(b)->peer_ip))
+#endif
 
 /**
  * Torrent state
