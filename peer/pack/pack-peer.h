@@ -1,6 +1,6 @@
 /**
  * \file
- *         Packing/unpacking of torrent descriptors.
+ *         Packing/unpacking of peer messages.
  * \author
  *         Mattias Buelens <mattias.buelens@student.kuleuven.be>
  */
