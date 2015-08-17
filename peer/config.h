@@ -51,7 +51,7 @@
  * both addresses no longer match up and accidental IID
  * collisions may occur between two distinct peers.
  */
-#define NANOTORRENT_IID_AS_PEER_ID 1
+#define NANOTORRENT_IID_AS_PEER_ID 0
 
 /**
  * Minimum completion before allowing end-game mode
