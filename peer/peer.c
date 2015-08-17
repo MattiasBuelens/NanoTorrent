@@ -283,7 +283,7 @@ void nanotorrent_peer_request_stop_partial(nanotorrent_peer_conn_t *conn) {
 
 void nanotorrent_peer_request_stop(nanotorrent_peer_conn_t *conn) {
 	bool had_request = conn->has_request;
-	uint8_t request_index = request_index;
+	uint8_t request_index = conn->request_index;
 
 	nanotorrent_peer_request_stop_partial(conn);
 	if (!had_request) {
