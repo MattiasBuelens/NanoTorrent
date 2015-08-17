@@ -139,7 +139,8 @@ void nanotorrent_peer_remove(nanotorrent_peer_conn_t *conn) {
 	// Remove from piece counts
 	nanotorrent_select_update_have(conn->have, 0);
 	conn->have = 0;
-	conn->has_request = false;
+	// Stop pending request
+	nanotorrent_peer_request_stop(conn);
 	// Stop heartbeat
 	etimer_stop(&conn->heartbeat);
 }
