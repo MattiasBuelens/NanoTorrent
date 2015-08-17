@@ -310,6 +310,7 @@ void nanotorrent_peer_request_stop_all(uint8_t piece_index) {
 	nanotorrent_bitset_clear(pending_pieces, piece_index);
 }
 
+static bool logged_seeding = false;
 bool nanotorrent_peer_request_next(nanotorrent_peer_conn_t *conn) {
 	if (conn->has_request) {
 		// Already requesting
@@ -317,6 +318,10 @@ bool nanotorrent_peer_request_next(nanotorrent_peer_conn_t *conn) {
 	}
 	if (nanotorrent_piece_is_seed()) {
 		// Seeding, nothing left to request
+		if(!logged_seeding) {
+			NOTE("SEEDING");
+			logged_seeding = true;
+		}
 		return false;
 	}
 	// Request next piece
