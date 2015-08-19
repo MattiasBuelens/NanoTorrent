@@ -8,10 +8,13 @@
 #include "contiki.h"
 
 #include "nanotorrent.h"
-#include "swarm.h"
 #include "peer.h"
 #include "piece.h"
 #include "piece-select.h"
+
+#if NANOTORRENT_TRACKER
+#include "swarm.h"
+#endif
 
 nanotorrent_torrent_state_t nanotorrent_state;
 #define state (nanotorrent_state)
@@ -44,15 +47,20 @@ void nanotorrent_init() {
 	nanotorrent_piece_init();
 	nanotorrent_select_init();
 	nanotorrent_peer_start();
+#if NANOTORRENT_TRACKER
 	nanotorrent_swarm_start();
+#endif
 }
 
 void nanotorrent_shutdown() {
+#if NANOTORRENT_TRACKER
 	nanotorrent_swarm_stop();
+#endif
 	nanotorrent_peer_stop();
 	nanotorrent_piece_shutdown();
 }
 
+#if NANOTORRENT_TRACKER
 void nanotorrent_connect_swarm() {
 	nanotorrent_peer_info_t *peer;
 	nanotorrent_peer_conn_t *conn;
@@ -82,6 +90,19 @@ bool nanotorrent_handle_swarm_event() {
 	}
 }
 
+#define nanotorrent_check_event(ev) \
+	(nanotorrent_peer_is_event(ev) \
+			|| nanotorrent_swarm_is_event(ev) \
+			|| (seed_timer_set && etimer_expired(&seed_timer)))
+
+#else
+
+#define nanotorrent_check_event(ev) \
+	(nanotorrent_peer_is_event(ev) \
+			|| (seed_timer_set && etimer_expired(&seed_timer)))
+
+#endif /* NANOTORRENT_TRACKER */
+
 bool nanotorrent_keep_going() {
 	if (!nanotorrent_piece_is_seed()) {
 		// Still leeching
@@ -103,11 +124,6 @@ bool nanotorrent_keep_going() {
 	return true;
 }
 
-#define nanotorrent_check_event(ev) \
-	(nanotorrent_swarm_is_event(ev) \
-			|| nanotorrent_peer_is_event(ev) \
-			|| (seed_timer_set && etimer_expired(&seed_timer)))
-
 PROCESS(nanotorrent_process, "NanoTorrent process");
 PROCESS_THREAD(nanotorrent_process, ev, data) {
 	PROCESS_EXITHANDLER(nanotorrent_shutdown())
@@ -115,6 +131,8 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 
 		// Initialize
 		nanotorrent_init();
+
+#if NANOTORRENT_TRACKER
 
 		// Wait until ready to join
 		PROCESS_WAIT_EVENT_UNTIL(nanotorrent_swarm_is_event(ev));
@@ -138,8 +156,11 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		// Connect with peers from swarm
 		nanotorrent_connect_swarm();
 
+#endif /* NANOTORRENT_TRACKER */
+
 		// Exchange pieces
 		while (nanotorrent_keep_going()) {
+#if NANOTORRENT_TRACKER
 			// Handle swarm event
 			if (nanotorrent_swarm_is_event(ev)
 					&& !nanotorrent_handle_swarm_event()) {
@@ -151,6 +172,7 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 				// Try to connect with more peers
 				nanotorrent_connect_swarm();
 			}
+#endif /* NANOTORRENT_TRACKER */
 
 			PROCESS_WAIT_EVENT_UNTIL(nanotorrent_check_event(ev));
 		}

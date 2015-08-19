@@ -19,6 +19,15 @@
 #define NANOTORRENT_FILE_NAME_LENGTH 16
 
 /**
+ * Enable tracker.
+ *
+ * - Peers discover and connect with remote peers.
+ * - Peers keep the tracker up-to-date on their
+ *   swarm membership state.
+ */
+#define NANOTORRENT_TRACKER 1
+
+/**
  * Enable link-local optimizations
  *
  * - Peers discover and connect with local peers.
