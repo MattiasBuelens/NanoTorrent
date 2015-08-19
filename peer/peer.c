@@ -46,6 +46,8 @@ void nanotorrent_peer_send_close(const nanotorrent_peer_info_t *peer);
 void nanotorrent_peer_send_data_request(const nanotorrent_peer_info_t *peer,
 		uint8_t piece_index, uint16_t data_start);
 
+void nanotorrent_peer_request_stop(nanotorrent_peer_conn_t *conn);
+
 nanotorrent_retry_callback_t nanotorrent_peer_request_retry_again;
 nanotorrent_retry_callback_t nanotorrent_peer_request_retry_stop;
 
