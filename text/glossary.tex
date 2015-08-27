@@ -1,0 +1,59 @@
+\newglossaryentry{torrent-desc}
+{
+  name        = {torrent descriptor},
+  description = {Metadata about a torrent, consisting of the location of the tracker (its \gls{IPv6} address) and the \gls{torrent-info}.}
+}
+
+\newglossaryentry{torrent-info}
+{
+  name        = {torrent information},
+  description = {Metadata describing the file to be distributed by a torrent. This consists of the file's size, the number of pieces that make up the whole file, the size of each piece and the SHA-1 hashes of all pieces. }
+}
+
+\newglossaryentry{torrent-info-hash}
+{
+  name        = {torrent info hash},
+  description = {SHA-1 hash of the \gls{torrent-info}. This hash acts as an identifier for the torrent, used in messages by trackers and peers to identify the torrent.}
+}
+
+\newglossaryentry{tracker}
+{
+  name        = {tracker},
+  description = {Server tracking the state of the \gls{swarm} of one or more torrents, allowing clients to discover other \glspl{peer} in the swarm.}
+}
+
+\newglossaryentry{peer}
+{
+  name        = {peer},
+  description = {A client participating in a torrent's distribution.}
+}
+
+\newglossaryentry{swarm}
+{
+  name        = {swarm},
+  description = {The active \glspl{peer} of a torrent.}
+}
+
+\newglossaryentry{seed}
+{
+  name        = {seed},
+  description = {\Gls{peer} which has finished downloading the entire distributed file.}
+}
+
+\newglossaryentry{seeder}
+{
+  name        = {seeder},
+  description = {See: \gls{seed}}
+}
+
+\newglossaryentry{initial-seed}
+{
+  name        = {initial seed},
+  description = {\Gls{seed} that bootstraps the torrent's distribution. This seed has not downloaded the file from other peers, but has been set up by the distributor with the entire file already available.}
+}
+
+\newglossaryentry{leecher}
+{
+  name        = {leecher},
+  description = {\Gls{peer} which are still missing parts of the distributed file.}
+}

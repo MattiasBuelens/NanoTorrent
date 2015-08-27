@@ -1,0 +1,66 @@
+\chapter{Conclusion}
+\label{cha:conclusion}
+
+This chapter concludes this master's thesis. Section \ref{sec:conc:summary} summarizes the contents of the text, section \ref{sec:conc:lessons} looks at the lessons learned from NanoTorrent, and \ref{sec:conc:future} discusses potential future work on this topic.
+
+\section{Summary}
+\label{sec:conc:summary}
+
+\subsection{Introduction}
+In order to keep \acrlongpl{WSN} operating for long periods of time, they must be able to adapt and evolve even after deployment. Nodes must be able to receive `over-the-air' updates, where new program files or configurations must be distributed over the \gls{WSN} and received by all destined nodes so they can reconfigure themselves. This must be done fast, efficient and load balanced over the whole network.
+
+NanoTorrent takes a \acrlong{P2P} approach to the problem, where nodes act as peers and download and upload pieces of the file to each other. The main contribution of this protocol is the exploration of a hybrid peer discovery mechanism, combining discovery through a centralized tracker with local neighbour discovery. This allows NanoTorrent to function in more heterogeneous \gls{WSN} deployments, where not all nodes run the same program or are located on different networks.
+
+\subsection{Related work}
+The protocol design is heavily inspired by BitTorrent, a popular \gls{P2P} file distribution protocol for the Internet. It borrows concepts such as torrents, trackers and pieces, but adapts them to the peculiarities of \glspl{WSN}. BitTorrent also has an extension to discover local peers on the same \gls{LAN} through local multicasts, but this is currently underused. NanoTorrent explores this possibility with its own local peer discovery that is similar in design, but is more deeply integrated in the \gls{P2P} protocol.
+
+Other \gls{P2P} protocols exist for file distribution in a \gls{WSN}. Deluge uses local broadcasts to propagate the file over the network, and avoids redundant transmissions by listening for identical messages from others. TinyTorrents is also influenced by BitTorrent, and supports interoperability with BitTorrent through a gateway.
+
+The researched \gls{P2P} solutions for \glspl{WSN} do not take advantage of the \gls{IPv6} architecture which is becoming more commonly available in many \gls{WSN} networks. This opens an opportunity for a file distribution that utilizes the multi-hop connectivity between distant nodes in the network and can even communicate with outside networks. 
+
+\subsection{Peer discovery}
+Peers discover other peers either through a centralized tracker or through local multicast announcements. Peers communicate with the tracker through a request-reply protocol, where they announce their membership state and in return receive a list of peers to connect with. Peers also send periodic announcements as link-local multicast messages to their direct neighbours, allowing those neighbours to discover them and initiate a connection.
+
+This hybrid approach to peer discovery makes the most use of local clusters of peers, while also preventing partitions to be created where some peers are unable to receive the full file. This allows the solution to work even in highly heterogeneous \gls{WSN} deployments, which is not well supported by other solutions.
+
+\subsection{File distribution}
+Peers distribute the file through a \gls{P2P} protocol, where every peer helps in distributing (parts of) the entire file to other peers.
+
+Peers try to connect with other peers discovered through both discovery mechanisms. They send periodic announcements to all connected peers, notifying them of their download progress. Peers are made robust against failures and lost transmissions through the use of retry counters and timers.
+
+Like BitTorrent, the distributed file is subdivided into pieces which can be independently distributed among peers, allowing peers to download multiple pieces in parallel to speed up distribution. Pieces are exchanged through a request-reply protocol, where peers request a missing piece that is available at a connected peer. The piece exchange also takes advantage of local clusters, by sending piece data to all local peers using a multicast when one local peer requests the piece.
+
+The protocol runs on top of \gls{IPv6}, allowing it to work across multiple networks and even across the Internet. For example, the tracker can be located both inside the \gls{WSN} or in a separate network, and a file could even be distributed across multiple \glspl{WSN} simultaneously. This flexibility enables support for larger and more heterogeneous network configurations, ranging from small-scale multi-lab set-ups to city-wide multi-network applications.
+
+\subsection{Implementation}
+A prototype was implemented for both the tracker and the peer. The prototype is rather minimal, but allows for a decent initial evaluation of the proposed solution.
+
+The tracker is implemented as a Java command-line application, to run in an network external to the \gls{WSN}. It tracks the swarm of all known torrents, responds to incoming announce requests and provides requesting peers with a list of other peers to connect with.
+
+The peer is implemented as a Contiki application in C, to run on nodes inside the \gls{WSN}. It is designed with the resource constraints of these nodes in mind. Some extra tools were developed to help in setting up a file distribution using NanoTorrent.
+
+\subsection{Evaluation}
+The prototype implementation has been evaluated in the COOJA simulator. The scalability was tested by running the prototype in simulated networks of increasing size. The proposed use case of a heterogeneous network consisting of different types of nodes was also evaluated in a network set up with two separated node clusters.
+
+The results show that NanoTorrent's hybrid peer discovery comes with a trade-off. The hybrid approach allows for faster distribution, but uses a lot of transmissions on the network. Whereas other distribution protocols such as Deluge \cite{deluge} only discover local neighbours, NanoTorrent can find distant nodes which are multiple hops away by fully using the potential of \gls{IPv6}. This allows it to work in more heterogeneous networks, but makes it more inefficient when used in homogeneous \gls{WSN} deployments.
+
+\section{Lessons learned}
+\label{sec:conc:lessons}
+NanoTorrent explores an opportunity to combine two peer discovery mechanisms in an attempt to take the best from both worlds. It turns out that there's a trade-off to be made between faster distribution speed and reduced communications. This is of course to be expected, as there's no such thing as a `free lunch' when it comes to real-life performance. There is still room for improvement in terms of transmissions, but the overhead from maintaining two parallel peer discovery mechanisms is unlikely to disappear.
+
+The choice to rely solely on \gls{IPv6} for the protocol's design gives NanoTorrent an advantage over other protocols by making multi-hop and cross-network operation possible by default. As \glspl{WSN} scale up to larger dimensions and vast deployments, designers of \glspl{WSN} protocols should consider the opportunity to rely on the available \gls{IPv6} infrastructure, rather than re-inventing the wheel with custom routing protocols. More investigation and effort is needed to make \gls{6LoWPAN} more feature-rich (e.g. security), but it is already a very good candidate as basis for a protocol.
+
+\section{Future work}
+\label{sec:conc:future}
+
+\subsection{Parameter tuning}
+As mentioned in section \ref{sec:eval:improvements}, many of the protocol's configuration parameters are not yet fully fine-tuned and their impact on the performance is not yet explored. Additional experiments could be carried out to test different combinations of parameters, and to optimize them for specific use cases.
+
+\subsection{Large-scale experiments}
+The scalability experiments from \ref{sec:eval:scale} stress-test the protocol in networks of up to 50 nodes. While this is already a relatively large network, it comes nowhere near the wide-scale deployments of hundreds or thousands of nodes envisioned for \gls{IoT} applications. Experiments with more nodes in different network topologies are needed to further investigate the scalability of the protocol.
+
+\subsection{Transmission reductions}
+The results from chapter \ref{cha:evaluation} indicate that there is still a lot of effort needed to make NanoTorrent efficient with transmissions. Section \ref{sec:eval:improvements} discusses some possible improvements, such as removing duplicate peer connections, pipelining piece data replies or sending more data in a single data reply. These improvements are yet to be explored.
+
+\subsection{Comparison with other protocols}
+Given the variety of existing file distribution protocols for \glspl{WSN}, a comparison of NanoTorrent versus one of these other protocols could prove valuable in learning more about their performance in various use cases. Although a comparison with Deluge \cite{deluge} was originally planned, it could not be completed due to technical difficulties and time constraints.

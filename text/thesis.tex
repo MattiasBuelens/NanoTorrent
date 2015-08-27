@@ -1,0 +1,127 @@
+% arara: pdflatex: {synctex: yes, action: batchmode, draft: yes, options: "-halt-on-error -file-line-error-style"}
+% arara: bibtex
+% arara: makeglossaries
+% arara: pdflatex: {synctex: yes, action: batchmode, draft: yes, options: "-halt-on-error -file-line-error-style"}
+% arara: pdflatex: {synctex: yes, action: nonstopmode, options: "-halt-on-error -file-line-error-style"}
+
+\documentclass[master=cws,masteroption=gs,english]{kulemt}
+\setup{title={NanoTorrent: Locality-aware peer-to-peer file distribution in wireless sensor networks},
+  author={Mattias Buelens},
+  promotor={Prof. dr. Danny Hughes},
+  assessor={Dr. Sam Michiels \and Dr. ir. Jan Ramon},
+  assistant={Dr. Nelson Matthys \and Wilfried Daniels},
+  acyear={2014 -- 2015}}
+% The following \setup may be removed entirely if no filing card is wanted
+\setup{filingcard,
+  translatedtitle=NanoTorrent: Plaatsbewuste peer-to-peer bestandsdistributie in draadloze sensornetwerken,
+  udc=621.3,
+  shortabstract={Wireless sensor networks consist of many small computer devices equipped with various sensors and actuators which communicate with each other using their wireless antenna. In order to keep them operating for long periods of time, they must be able to adapt and evolve even after being deployed. This requires them to retrieve large files such as new programs or configurations over the network fast and efficiently.
+  \endgraf NanoTorrent is a peer-to-peer protocol that allows fast distribution of files in wireless sensor networks. It introduces the use of a hybrid peer discovery mechanism with both a tracker and local neighbour discovery, allowing it to work even in heterogeneous deployments with nodes running different programs. The peer-to-peer approach helps balance the load of the file distribution on the seed and the network, and takes advantage of link-local multicast messages to distribute parts of the file to many neighbours simultaneously.
+  \endgraf The evaluation of the protocol shows that NanoTorrent can provide fast file distribution in many different network configurations. The hybrid peer discovery approach comes with a trade-off, where increased distribution speed also comes with additional transmissions taking multiple hops across the network to distribute the file to distant nodes.}}
+% Uncomment the next line for generating the cover page
+%\setup{coverpageonly}
+% Uncomment the next \setup to generate only the first pages (e.g., if you
+% are a Word user.
+%\setup{frontpagesonly}
+
+% Choose the main text font (e.g., Latin Modern)
+\setup{font=lm}
+
+% If you want to include other LaTeX packages, do it here. 
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{rotating}
+\usepackage{pdfpages}
+
+% Finally the hyperref package is used for pdf files.
+% This can be commented out for printed versions.
+%\usepackage[pdfusetitle,colorlinks,plainpages=false]{hyperref}
+\usepackage[%
+	pdfusetitle,%
+	colorlinks,%
+	plainpages=false,%
+	filecolor={[rgb]{0,0,1}},%
+	urlcolor={[rgb]{0,0,1}},%
+	citecolor={[rgb]{0,0,0.4}},%
+	%linkcolor={[rgb]{0,0,0.4}}%
+	linkcolor={[rgb]{0,0,0}}%
+]{hyperref}
+
+% Load glossaries after hyperref to make links work
+\usepackage[acronym,section=section,nopostdot,nogroupskip,nonumberlist]{glossaries}
+\usepackage{glossary-super}
+\setacronymstyle{long-short}
+\renewcommand{\glsnamefont}[1]{\textbf{#1}}
+\renewcommand*{\glsclearpage}{}
+\makeglossaries
+
+% Load glossaries
+\include{abbreviations}
+\include{glossary}
+
+%\includeonly{intro}
+
+\begin{document}
+
+\begin{preface}
+I would like to thank my coordinators Nelson Matthys and Wilfried Daniels, for guiding me throughout the year to make this thesis. They provided me with valuable insights into the many aspects and challenges of Internet of Things and wireless sensor networks. They were always very helpful whenever I had questions, and always asked the right questions to make me better understand potential problems and come up with solutions.
+
+I would also like to thank my promotor prof. Danny Hughes, for making this thesis possible and coming up with great ideas to improve the protocol design.
+
+Finally, I want to thank you -- the reader -- for taking the time to read my thesis text. Whether you're a proofreader, a jury member or you just thought this thesis might be worth a look, I appreciate the effort and I'd love to know your feedback.
+
+\end{preface}
+
+\tableofcontents*
+
+\begin{abstract}
+  Wireless sensor networks consist of many small computer devices equipped with various sensors and actuators which communicate with each other using their wireless antenna. These networks are a key part of the Internet of Things vision, where these devices are deployed to monitor or control real-life physical things and make them `smart' by connecting them to the Internet. In order to keep wireless sensor networks operating for long periods of time, they must be able to adapt and evolve even after many years after being deployed. This requires them to retrieve large files such as new programs or configurations over the network fast and efficiently.
+  
+  NanoTorrent is a peer-to-peer protocol that allows fast distribution of files in wireless sensor networks. It introduces the use of a hybrid peer discovery mechanism with both a tracker and local neighbour discovery, allowing it to work even in heterogeneous deployments consisting of different types of nodes running different programs. The peer-to-peer approach helps balance the load of the file distribution on the seed and the network, and takes advantage of link-local multicast messages to distribute parts of the file to many neighbours simultaneously.
+
+  The evaluation of the protocol shows that NanoTorrent can provide fast file distribution in many different network configurations. The distribution speed scales well with the size of the network, although in its current form the amount of transmissions is still an issue. The hybrid peer discovery approach means that peers send a lot of messages to discover other peers, and can find distant peers which require messages to take multiple hops across the network to reach them. More research and experimentation is needed to reduce the needed communications.
+
+\end{abstract}
+
+% A list of figures and tables is optional
+\listoffigures
+%\listoftables
+% If you only have a few figures and tables you can use the following instead
+%\listoffiguresandtables
+%\todo{Change to just \textbackslash{}listoffigures if no tables}
+
+% The list of symbols is also optional.
+%\setglossarysection{section}
+%\printglossary[type=acronym,title=List of Abbreviations]
+%\printglossary[type=symbol,title=List of Symbols]
+\chapter{List of Terms and Abbreviations}
+
+\printglossary[type=main,style=altlist,title=List of Terms]
+
+\setlength{\glsdescwidth}{.8\textwidth}
+\printglossary[type=acronym,style=long,title=List of Abbreviations]
+
+% Now comes the main text
+\mainmatter
+
+\include{intro}
+\include{related-work}
+\include{discovery}
+\include{distribution}
+\include{implementation}
+\include{evaluation}
+\include{conclusion}
+
+% If you have appendices:
+\appendixpage*          % if wanted
+\appendix
+\include{app-popular}
+\include{app-ieee}
+
+\backmatter
+% The bibliography comes after the appendices.
+% You can replace the standard "abbrv" bibliography style by another one.
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
