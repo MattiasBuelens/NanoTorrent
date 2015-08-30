@@ -1,8 +1,8 @@
-package looci.nanotorrent.tracker;
+package nanotracker;
 
 import java.util.Date;
 
-import looci.nanotorrent.tracker.protocol.PeerInfo;
+import nanotracker.protocol.PeerInfo;
 
 public class TrackedPeer {
 

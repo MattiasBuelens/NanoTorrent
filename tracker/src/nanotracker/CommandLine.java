@@ -1,4 +1,4 @@
-package looci.nanotorrent.tracker;
+package nanotracker;
 
 import java.io.IOException;
 import java.net.Inet6Address;

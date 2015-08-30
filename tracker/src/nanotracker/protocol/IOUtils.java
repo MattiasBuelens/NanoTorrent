@@ -1,4 +1,4 @@
-package looci.nanotorrent.tracker.protocol;
+package nanotracker.protocol;
 
 import java.net.Inet6Address;
 import java.net.InetAddress;

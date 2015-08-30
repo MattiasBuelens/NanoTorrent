@@ -1,4 +1,4 @@
-package looci.nanotorrent.tracker;
+package nanotracker;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -6,8 +6,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import looci.nanotorrent.tracker.protocol.InfoHash;
-import looci.nanotorrent.tracker.protocol.PeerInfo;
+import nanotracker.protocol.InfoHash;
+import nanotracker.protocol.PeerInfo;
 
 public class TrackedTorrent {
 

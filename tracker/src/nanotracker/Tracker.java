@@ -1,4 +1,4 @@
-package looci.nanotorrent.tracker;
+package nanotracker;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,11 +11,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import looci.nanotorrent.tracker.protocol.AnnounceEvent;
-import looci.nanotorrent.tracker.protocol.AnnounceReply;
-import looci.nanotorrent.tracker.protocol.AnnounceRequest;
-import looci.nanotorrent.tracker.protocol.InfoHash;
-import looci.nanotorrent.tracker.protocol.PeerInfo;
+import nanotracker.protocol.AnnounceEvent;
+import nanotracker.protocol.AnnounceReply;
+import nanotracker.protocol.AnnounceRequest;
+import nanotracker.protocol.InfoHash;
+import nanotracker.protocol.PeerInfo;
 
 public class Tracker {
 

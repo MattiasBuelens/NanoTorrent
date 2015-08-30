@@ -1,4 +1,4 @@
-package looci.nanotorrent.tracker;
+package nanotracker;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -10,9 +10,9 @@ import java.nio.ByteOrder;
 import java.nio.channels.DatagramChannel;
 import java.util.concurrent.TimeUnit;
 
-import looci.nanotorrent.tracker.protocol.AnnounceReply;
-import looci.nanotorrent.tracker.protocol.AnnounceRequest;
-import looci.nanotorrent.tracker.protocol.PeerInfo;
+import nanotracker.protocol.AnnounceReply;
+import nanotracker.protocol.AnnounceRequest;
+import nanotracker.protocol.PeerInfo;
 
 public class TrackerServer implements Closeable {
 
