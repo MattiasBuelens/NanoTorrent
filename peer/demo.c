@@ -49,6 +49,10 @@ PROCESS_THREAD(nanotorrent_demo_process, ev, data) {
 		while (1) {
 			PROCESS_WAIT_EVENT()
 			;
+
+			if (ev == nanotorrent_seeding_event) {
+				NOTE("SEEDING");
+			}
 		}
 
 	PROCESS_END()

@@ -19,6 +19,9 @@
 nanotorrent_torrent_state_t nanotorrent_state;
 #define state (nanotorrent_state)
 
+process_event_t nanotorrent_seeding_event;
+static bool posted_seeding_event;
+
 /**
  * Seed timer
  */
@@ -31,6 +34,7 @@ void nanotorrent_start(nanotorrent_torrent_desc_t desc, const char *file_name) {
 	state.desc = desc;
 	strncpy(state.file_name, file_name, NANOTORRENT_FILE_NAME_LENGTH - 1);
 	seed_timer_set = false;
+	posted_seeding_event = false;
 
 	// Calculate info hash
 	nanotorrent_torrent_info_hash(&state.desc.info, &state.info_hash);
@@ -130,6 +134,7 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 	PROCESS_BEGIN()
 
 		// Initialize
+		nanotorrent_seeding_event = process_alloc_event();
 		nanotorrent_init();
 
 #if NANOTORRENT_TRACKER
@@ -138,7 +143,8 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		PROCESS_WAIT_EVENT_UNTIL(nanotorrent_swarm_is_event(ev));
 		if (!nanotorrent_swarm_is_joining()) {
 			ERROR("Failed to start joining swarm");
-			PROCESS_EXIT();
+			PROCESS_EXIT()
+			;
 		}
 
 		PRINTF("Joining swarm with tracker [");
@@ -149,7 +155,8 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		PROCESS_WAIT_EVENT_UNTIL(nanotorrent_swarm_is_event(ev));
 		if (!nanotorrent_swarm_is_joined()) {
 			ERROR("Failed to join swarm");
-			PROCESS_EXIT();
+			PROCESS_EXIT()
+			;
 		}
 		PRINTF("Joined the swarm\n");
 
@@ -161,10 +168,21 @@ PROCESS_THREAD(nanotorrent_process, ev, data) {
 		// Exchange pieces
 		while (nanotorrent_keep_going()) {
 #if NANOTORRENT_TRACKER
+			// Notify when started seeding
+			if (!posted_seeding_event && nanotorrent_piece_is_seed()) {
+				int post_result = process_post(PROCESS_BROADCAST,
+						nanotorrent_seeding_event,
+						NULL);
+				if (post_result == PROCESS_ERR_OK) {
+					posted_seeding_event = true;
+				}
+			}
+
 			// Handle swarm event
 			if (nanotorrent_swarm_is_event(ev)
 					&& !nanotorrent_handle_swarm_event()) {
-				PROCESS_EXIT();
+				PROCESS_EXIT()
+				;
 			}
 
 			// Handle peer event

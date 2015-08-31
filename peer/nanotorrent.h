@@ -12,6 +12,7 @@
 #include "torrent.h"
 
 PROCESS_NAME(nanotorrent_process);
+extern process_event_t nanotorrent_seeding_event;
 
 void nanotorrent_start(nanotorrent_torrent_desc_t desc, const char *file_name);
 void nanotorrent_stop();
