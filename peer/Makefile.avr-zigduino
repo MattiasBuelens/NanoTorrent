@@ -2,6 +2,9 @@
 CFS_OFFSET = 0x40
 CFLAGS += -DCFS_EEPROM_CONF_OFFSET=$(CFS_OFFSET)
 
+# EEPROM size in bytes
+EEPROM_SIZE = 4096
+
 # Create special EEPROM containing seed file
 #  * %.seed.eep target creates EEPROM
 #  * %.seed.eu target uploads EEPROM
@@ -10,4 +13,13 @@ CFLAGS += -DCFS_EEPROM_CONF_OFFSET=$(CFS_OFFSET)
 		--add-section=.eepromfile=$(TORRENT_FILE) \
 		--set-section-flags=.eepromfile="alloc,load" \
 		--change-section-lma .eepromfile=$(CFS_OFFSET) \
+		-O ihex $< $@
+
+# Create EEPROM file with all unset bits set to ones
+# This ensures that any previous file data is removed
+#  * %.clear.eep target creates EEPROM
+#  * %.clear.eu target uploads EEPROM
+%.clear.eep: %.eep
+	$(OBJCOPY) \
+		--gap-fill 0xFF --pad-to $(EEPROM_SIZE) \
 		-O ihex $< $@
