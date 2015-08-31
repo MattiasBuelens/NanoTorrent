@@ -46,9 +46,9 @@ PROCESS_THREAD(nanotorrent_demo_process, ev, data) {
 		demo_start();
 
 #if defined(__AVR__)
-		// Configure PB3 (LED) as output pin
-		DDRB = (1 << DDB3);
-		PORTB = (0 << PB3);
+		// Configure PB1 (LED) as output pin
+		DDRB = (1 << DDB1);
+		PORTB = (0 << PB1);
 #endif
 
 		// TODO For debugging
@@ -60,7 +60,7 @@ PROCESS_THREAD(nanotorrent_demo_process, ev, data) {
 
 #if defined(__AVR__)
 				// Turn on LED
-				PORTB = (1 << PB3);
+				PORTB = (1 << PB1);
 #endif
 			}
 		}
