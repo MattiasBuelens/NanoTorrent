@@ -19,6 +19,9 @@
 
 process_event_t nanotorrent_peer_event;
 
+process_event_t nanotorrent_seeding_event;
+static bool posted_seeding_event;
+
 /**
  * Peer connections
  */
@@ -77,6 +80,7 @@ void nanotorrent_peer_init() {
 	// Reset heartbeat
 	heartbeat_delay = NANOTORRENT_PEER_HEARTBEAT_PERIOD;
 	etimer_stop(&heartbeat);
+	posted_seeding_event = false;
 }
 
 void nanotorrent_peer_shutdown() {
@@ -333,6 +337,19 @@ bool nanotorrent_peer_request_next(nanotorrent_peer_conn_t *conn) {
 	return true;
 }
 
+void nanotorrent_peer_post_seeding() {
+	if (posted_seeding_event) {
+		return;
+	}
+
+	int result = process_post(PROCESS_BROADCAST,
+			(nanotorrent_seeding_event),
+			NULL);
+	if (result == PROCESS_ERR_OK) {
+		posted_seeding_event = true;
+	}
+}
+
 nanotorrent_peer_conn_t *nanotorrent_peer_data_receiver(const nanotorrent_peer_info_t *peer,
 		uint8_t piece_index, uint16_t data_offset, uint16_t data_length) {
 	nanotorrent_peer_conn_t *conn;
@@ -402,6 +419,10 @@ void nanotorrent_peer_receive_data(nanotorrent_peer_conn_t *conn,
 			etimer_adjust(&heartbeat, -(int) heartbeat_delay);
 			// Notify piece complete
 			nanotorrent_peer_post_event();
+			// Notify if started seeding
+			if (nanotorrent_piece_is_seed()) {
+				nanotorrent_peer_post_seeding();
+			}
 		} else {
 			// Piece corrupted
 			WARN("Piece %u corrupted", piece_index);
@@ -674,6 +695,7 @@ PROCESS_THREAD(nanotorrent_peer_process, ev, data) {
 
 		// Initialize
 		nanotorrent_peer_event = process_alloc_event();
+		nanotorrent_seeding_event = process_alloc_event();
 		nanotorrent_peer_init();
 
 		// Schedule first heartbeat immediately
@@ -711,6 +733,11 @@ PROCESS_THREAD(nanotorrent_peer_process, ev, data) {
 				// Schedule next heartbeat
 				heartbeat_delay = NANOTORRENT_PEER_HEARTBEAT_PERIOD;
 				etimer_set(&heartbeat, heartbeat_delay);
+			}
+
+			// Notify if started seeding
+			if (nanotorrent_piece_is_seed()) {
+				nanotorrent_peer_post_seeding();
 			}
 
 			// Wait for timer event
