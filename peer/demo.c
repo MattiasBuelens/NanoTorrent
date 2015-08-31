@@ -45,13 +45,23 @@ PROCESS_THREAD(nanotorrent_demo_process, ev, data) {
 
 		demo_start();
 
+#if defined(__AVR__)
+		// Configure PB3 (LED) as output pin
+		DDRB = (1 << DDB3);
+		PORTB = (0 << PB3);
+#endif
+
 		// TODO For debugging
 		while (1) {
-			PROCESS_WAIT_EVENT()
-			;
+			PROCESS_WAIT_EVENT();
 
 			if (ev == nanotorrent_seeding_event) {
 				NOTE("SEEDING");
+
+#if defined(__AVR__)
+				// Turn on LED
+				PORTB = (1 << PB3);
+#endif
 			}
 		}
 
